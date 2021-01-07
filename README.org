@@ -1,0 +1,8 @@
+#+TITLE: Adventure Game (Jogo Aventura - ja)
+#+AUTHOR: José Galinha
+#+EMAIL: jbgalinha@gmail.com
+#+DATE: Thu Jan  7 12:12:33 2021
+#+DESCRIPTION: Adventure Game createad for the TG2 of discipline of Sistemas Operativos
+
+<- [[file:~/personal/estig/SistemasOperativos.org][Back to Sistemas Operativos]]
+
