@@ -25,11 +25,13 @@
 
 * Constantes e Vairáveis
 
+Definiçao de variaveis e constantes a usar no codigo
 
 #+CAPTION: Constantes e Variaveis
 #+BEGIN_SRC C +n
 
 #define MAX_NAME 50 /* Maximum name length */ 
+#define MAX_OBJECT_NAME 10 /* Maximum object name lenght */
 #define MAX_TEXT_ROOM_DESCRIPTION 500 /* Maximum lenght for the room description */
 #define MAX_ROOMS 100 /* Maximum rooms in each map */
 #define INITIAL_ENERGY_PLAYER 100 /* Default start player energy */
@@ -37,7 +39,6 @@
 #define NONE -1 /* Constant do start empty things */
 
 #+END_SRC
-
 
 * Estrutura =Player=
 
@@ -71,6 +72,20 @@ struct Room {
     char description[MAX_TEXT_ROOM_DESCRIPTION];
 };
 
+#+END_SRC
+
+* Estrutura =Objecto=
+
+Definiçao da estrutura do objecto:
+- name: nome do objecto
+- power: nivel do poder na luta
+
+#+BEGIN_SRC c +n
+/* Object Structure */
+struct Object {
+    char name[MAX_OBJECT_NAME];
+    short int power;
+}
 #+END_SRC
 
 * Declaração de funções
@@ -121,7 +136,7 @@ int main() {
 /*****************************************************************************/
 
 /* Function to init the player */
-void PlayerInit(struct Player *pPlayer) {
+void PlayerInit(struct Player *pPlayer) { // (ref:PlayerInit)
     printf("Qual o seu nome aventureiro? \n -> ");
     scanf("%s", (*pPlayer).name);
     (*pPlayer).energy = INITIAL_ENERGY_PLAYER;
@@ -129,6 +144,7 @@ void PlayerInit(struct Player *pPlayer) {
     (*pPlayer).object = NONE; 
     (*pPlayer).treasure = NONE;
     printf("\nBoa Sorte %s! Vai precisar...\n", (*pPlayer).name);
+    printf("\n%s! Voce tem %hd energia\n", (*pPlayer).name, (*pPlayer).energy);
 }
 
 /* Function to show the player stats */
