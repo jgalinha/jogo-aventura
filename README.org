@@ -80,12 +80,24 @@ Definiçao da estrutura do objecto:
 - name: nome do objecto
 - power: nivel do poder na luta
 
+#+CAPTION: Estrutura do objecto
 #+BEGIN_SRC c +n
 /* Object Structure */
 struct Object {
     char name[MAX_OBJECT_NAME];
     short int power;
-}
+};
+#+END_SRC
+
+* Estrutura =Monstro=
+
+#+CAPTION: Estrutura do monstro
+#+BEGIN_SRC C +n
+/* Monster Structure */
+struct Monster {
+    short int energy;
+    short int localtion;
+};
 #+END_SRC
 
 * Declaração de funções
