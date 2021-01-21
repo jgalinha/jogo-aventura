@@ -91,12 +91,16 @@ struct Object {
 
 * Estrutura =Monstro=
 
+Definação da estrutura do monstro:
+- energy: energia inicial do monstro
+- location: localização inicial do monstro
+
 #+CAPTION: Estrutura do monstro
 #+BEGIN_SRC C +n
 /* Monster Structure */
 struct Monster {
     short int energy;
-    short int localtion;
+    short int location;
 };
 #+END_SRC
 
@@ -156,7 +160,6 @@ void PlayerInit(struct Player *pPlayer) { // (ref:PlayerInit)
     (*pPlayer).object = NONE; 
     (*pPlayer).treasure = NONE;
     printf("\nBoa Sorte %s! Vai precisar...\n", (*pPlayer).name);
-    printf("\n%s! Voce tem %hd energia\n", (*pPlayer).name, (*pPlayer).energy);
 }
 
 /* Function to show the player stats */
