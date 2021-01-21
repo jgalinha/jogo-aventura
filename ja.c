@@ -127,4 +127,3 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
     strcpy(pRoom->description, description);
     
 }
-
