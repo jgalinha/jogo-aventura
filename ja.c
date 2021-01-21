@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define MAX_NAME 50 /* Maximum name length */
+#define MAX_NAME 50 /* Maximum name length */ 
 #define MAX_TEXT_ROOM_DESCRIPTION 500 /* Maximum lenght for the room description */
 #define MAX_ROOMS 100 /* Maximum rooms in each map */
 #define INITIAL_ENERGY_PLAYER 100 /* Default start player energy */

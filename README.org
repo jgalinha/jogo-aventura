@@ -7,9 +7,10 @@
 
 <- [[file:~/personal/estig/SistemasOperativos.org][Back to Sistemas Operativos]]
 
-* Comentário incial e =includes=
+* Comentario Incial e =includes=
 
-#+BEGIN_SRC C
+#+CAPTION: Comentario Incial e =includes=
+#+BEGIN_SRC C +n
 
 /*****************************************************************************/
 /*                  TG2 - Adventure Game(ja - jogo aventura)                 */
@@ -24,9 +25,11 @@
 
 * Constantes e Vairáveis
 
-#+BEGIN_SRC C
 
-#define MAX_NAME 50 /* Maximum name length */
+#+CAPTION: Constantes e Variaveis
+#+BEGIN_SRC C +n
+
+#define MAX_NAME 50 /* Maximum name length */ 
 #define MAX_TEXT_ROOM_DESCRIPTION 500 /* Maximum lenght for the room description */
 #define MAX_ROOMS 100 /* Maximum rooms in each map */
 #define INITIAL_ENERGY_PLAYER 100 /* Default start player energy */
@@ -35,9 +38,10 @@
 
 #+END_SRC
 
+
 * Estrutura =Player=
 
-#+BEGIN_SRC C
+#+BEGIN_SRC C +n
 
 /* Player Structure */
 struct Player {
@@ -52,7 +56,7 @@ struct Player {
 
 * Estrutura =Room=
 
-#+BEGIN_SRC C
+#+BEGIN_SRC C +n
 
 /* Room Structure */
 struct Room {
@@ -71,7 +75,7 @@ struct Room {
 
 * Declaração de funções
 
-#+BEGIN_SRC C
+#+BEGIN_SRC C +n
 
 /* Player Functions **********************************************************/
 void PlayerInit(struct Player *pPlayer); 
@@ -85,9 +89,10 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
 /*****************************************************************************/
 
 #+END_SRC
+
 * Função =main=
 
-#+BEGIN_SRC C
+#+BEGIN_SRC C +n
 
 int main() {
 
@@ -109,7 +114,7 @@ int main() {
 #+END_SRC
 * Funções do =player=
 
-#+BEGIN_SRC C
+#+BEGIN_SRC C +n
 
 /*****************************************************************************/
 /*                              Player Functions                             */
@@ -134,7 +139,7 @@ void PlayerStats(struct Player player) {
 #+END_SRC
 * Funções do =map=
 
-#+BEGIN_SRC C
+#+BEGIN_SRC C +n
 
 /*****************************************************************************/
 /*                               Map Functions                               */
