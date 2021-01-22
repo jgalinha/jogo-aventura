@@ -81,7 +81,7 @@ Definiçao da estrutura do objecto:
 - power: nivel do poder na luta
 
 #+CAPTION: Estrutura do objecto
-#+BEGIN_SRC c +n
+#+BEGIN_SRC C +n
 /* Object Structure */
 struct Object {
     char name[MAX_OBJECT_NAME];
@@ -117,6 +117,11 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
               short int east, short int west, short int up, short int down,
               short int object, short int treasure,
               char description[MAX_TEXT_ROOM_DESCRIPTION]);
+/* Object Functions **********************************************************/
+short int ObjectsInit(struct Object *pObjects[]); 
+void ObjectInit(struct Object *pObject, char name[MAX_OBJECT_NAME],
+                short int power); 
+short int DefaultObjectsInit(struct Object *pObject); 
 /*****************************************************************************/
 
 #+END_SRC
@@ -129,11 +134,14 @@ int main() {
 
     struct Player player;
     struct Room map[MAX_ROOMS];
+    struct Object objects[MAX_ROOMS];
     short int nRoomMap;
+    short int nObjects;
 
     /* Player Initializations */
     PlayerInit(&player);
     /* Object Initialization */
+    DefaultObjectsInit(objects);
     /* Map Initialization */
     nRoomMap = InitDefaultMap(map);
     /* Monster Initialization */
@@ -143,6 +151,7 @@ int main() {
 }
 
 #+END_SRC
+
 * Funções do =player=
 
 #+BEGIN_SRC C +n
@@ -216,5 +225,57 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
     
 }
 
+#+END_SRC
+
+* Funções do =objecto=
+
+** ObjectsInit
+
+Inicia o vector de objectos disponíves ao jogador, a função devolver um inteiro
+com o número objectos disponíves
+
+#+CAPTION: ObjectsInit
+#+BEGIN_SRC C +n
+/* Function to initialize de objects vector */
+short int ObjectsInit(struct Object *pObjects[]) {
+    return 0;
+}
+#+END_SRC
+
+** ObjectInit
+
+Função para criar os objectos do jogo, à função é passado um apontador de um
+objecto para definir os seus dados.
+
+#+CAPTION: ObjectInit
+#+BEGIN_SRC C +n
+/* Function to initialize an object */
+void ObjectInit(struct Object *pObject, char name[MAX_OBJECT_NAME],
+                short int power) {
+    strcpy(pObject->name, name);    
+    pObject->power = power;
+}
+#+END_SRC
+
+** DefaultObjectsInit
+
+Função que inicia um conjunto de objectos por defeito, a seu usado em caso
+de erro no carregamento do ficheiro de configurações
+
+#+CAPTION: DefaultObjectsInit
+#+BEGIN_SRC C +n
+/* Function to initialize the default objects vector */
+short int DefaultObjectsInit(struct Object *pObject) {
+    ObjectInit(&pObject[0], "faca", 5);
+    ObjectInit(&pObject[1], "espada", 20);
+    ObjectInit(&pObject[2], "escudo", -10);
+    ObjectInit(&pObject[3], "sopa", -3);
+    ObjectInit(&pObject[4], "alabarda", 35);
+    ObjectInit(&pObject[5], "machado", 45);
+    ObjectInit(&pObject[5], "besta", 20);
+    ObjectInit(&pObject[6], "poção mágica", -80);
+
+    return 7;
+}
 #+END_SRC
 
