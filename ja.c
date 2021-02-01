@@ -17,7 +17,6 @@
 #define INITIAL_PLAYER_LOCATION 0 /* Defaule start player location */
 #define NONE -1 /* Constant do start empty things */
 
-
 short int nRoomMap; /* Number of rooms in the map */
 
 /* Player Structure */

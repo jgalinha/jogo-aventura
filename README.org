@@ -7,6 +7,20 @@
 
 <- [[file:~/personal/estig/SistemasOperativos.org][Back to Sistemas Operativos]]
 
+* Makefile
+
+Criação de makefile para compilação do código, tornando mais fácil o processo de devenvolvimento
+
+#+BEGIN_SRC makefile :tangle makefile
+all: ja
+
+ja: ja.c
+	gcc ja.c -o ja
+
+clean: rm ja *.o
+#+END_SRC
+ 
+
 * Comentario Incial e =includes=
 
 #+CAPTION: Comentario Incial e =includes=
@@ -39,7 +53,6 @@ Definiçao de variaveis e constantes a usar no codigo
 #define INITIAL_ENERGY_PLAYER 100 /* Default start player energy */
 #define INITIAL_PLAYER_LOCATION 0 /* Defaule start player location */
 #define NONE -1 /* Constant do start empty things */
-
 
 short int nRoomMap; /* Number of rooms in the map */
 
