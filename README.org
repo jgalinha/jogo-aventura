@@ -3,7 +3,7 @@
 #+EMAIL: jbgalinha@gmail.com
 #+DATE: Thu Jan  7 12:12:33 2021
 #+DESCRIPTION: Adventure Game createad for the TG2 of discipline of Sistemas Operativos
-#+PROPERTY: header-args:C :tangle ja.c :mkdirp yes :main no
+#+PROPERTY: header-args:C :tangle ja.c :mkdirp yes :main no :cache yes
 
 <- [[file:~/personal/estig/SistemasOperativos.org][Back to Sistemas Operativos]]
 
@@ -11,7 +11,7 @@
 
 Criação de makefile para compilação do código, tornando mais fácil o processo de devenvolvimento
 
-#+BEGIN_SRC makefile :tangle makefile
+#+BEGIN_SRC makefile :tangle makefile :cache yes
 all: ja
 
 ja: ja.c
@@ -54,6 +54,7 @@ Definiçao de variaveis e constantes a usar no codigo
 #define INITIAL_PLAYER_LOCATION 0 /* Defaule start player location */
 #define NONE -1 /* Constant do start empty things */
 
+short int su = 0; /* Varriável para controlar o SuperUser */
 short int nRoomMap; /* Number of rooms in the map */
 
 #+END_SRC
@@ -143,6 +144,8 @@ short int DefaultObjectsInit(struct Object *pObject);
 /* Monster Functions *********************************************************/
 void MonsterInit (struct Monster *pMonster, short int energy,
                   short int location); 
+/* Super User Functions ******************************************************/
+void SuperUserInit(int argc, char *argv[], struct Player *pPlayer);
 /*****************************************************************************/
 
 #+END_SRC
@@ -151,8 +154,9 @@ void MonsterInit (struct Monster *pMonster, short int energy,
 
 #+BEGIN_SRC C +n
 
-int main() {
+int main(int argc, char *argv[]) {
 
+    
     struct Player player;
     struct Room map[MAX_ROOMS];
     struct Object objects[MAX_ROOMS];
@@ -166,6 +170,9 @@ int main() {
     nRoomMap = InitDefaultMap(map);
     /* Monster Initialization */
     MonsterInit(&monster, 100, -1);
+    
+    if (argc > 1)
+        SuperUserInit(argc, argv, &player);
     
     return 0;
 }
@@ -300,7 +307,7 @@ short int DefaultObjectsInit(struct Object *pObject) {
     return 7;
 }
 #+END_SRC
-
+    
 * Funções do =monstro=
 
 ** TODO MonsterInit [0%]
@@ -333,6 +340,28 @@ void MonsterInit (struct Monster *pMonster, short int energy,
         } while (location <= 1);
     } 
     pMonster->location = location;
+}
+#+END_SRC
+
+* Funções do =Super User=
+
+** SuperUserInit
+
+Função para iniciar o modo super user
+
+#+CAPTION: SuperUserInit
+#+BEGIN_SRC C +n
+void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
+    if ( atoi(argv[1]) == 1765 ){
+        if ( argc > 2 ) 
+            pPlayer->energy = (atoi(argv[2]) > 0) ? atoi(argv[2]) : pPlayer->energy;
+        if ( argc > 3 )
+            pPlayer->location = (atoi(argv[3]) > 0) ? atoi(argv[3]) : pPlayer->location;
+        if ( argc > 4 )
+            pPlayer->object = (atoi(argv[3]) > 0) ? atoi(argv[3]) : pPlayer->object;
+        su = 1;
+        printf("MODO SUPER USER ATIVO");
+    }
 }
 #+END_SRC
 

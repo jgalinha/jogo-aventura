@@ -17,6 +17,7 @@
 #define INITIAL_PLAYER_LOCATION 0 /* Defaule start player location */
 #define NONE -1 /* Constant do start empty things */
 
+short int su = 0; /* Varriável para controlar o SuperUser */
 short int nRoomMap; /* Number of rooms in the map */
 
 /* Player Structure */
@@ -70,10 +71,13 @@ short int DefaultObjectsInit(struct Object *pObject);
 /* Monster Functions *********************************************************/
 void MonsterInit (struct Monster *pMonster, short int energy,
                   short int location); 
+/* Super User Functions ******************************************************/
+void SuperUserInit(int argc, char *argv[], struct Player *pPlayer);
 /*****************************************************************************/
 
-int main() {
+int main(int argc, char *argv[]) {
 
+    
     struct Player player;
     struct Room map[MAX_ROOMS];
     struct Object objects[MAX_ROOMS];
@@ -87,6 +91,9 @@ int main() {
     nRoomMap = InitDefaultMap(map);
     /* Monster Initialization */
     MonsterInit(&monster, 100, -1);
+    
+    if (argc > 1)
+        SuperUserInit(argc, argv, &player);
     
     return 0;
 }
@@ -195,4 +202,17 @@ void MonsterInit (struct Monster *pMonster, short int energy,
         } while (location <= 1);
     } 
     pMonster->location = location;
+}
+
+void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
+    if ( atoi(argv[1]) == 1765 ){
+        if ( argc > 2 ) 
+            pPlayer->energy = (atoi(argv[2]) > 0) ? atoi(argv[2]) : pPlayer->energy;
+        if ( argc > 3 )
+            pPlayer->location = (atoi(argv[3]) > 0) ? atoi(argv[3]) : pPlayer->location;
+        if ( argc > 4 )
+            pPlayer->object = (atoi(argv[3]) > 0) ? atoi(argv[3]) : pPlayer->object;
+        su = 1;
+        printf("MODO SUPER USER ATIVO");
+    }
 }
