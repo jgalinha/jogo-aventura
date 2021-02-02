@@ -222,18 +222,20 @@ void PlayerStats(struct Player player) {
 /* Function to initialize one default map ************************************/
 short int InitDefaultMap(struct Room *pMap) {
     /* TODO Create the default map layout */
-    RoomInit(&pMap[0], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste1");
-    RoomInit(&pMap[1], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste3");
-    RoomInit(&pMap[2], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste3");
-    RoomInit(&pMap[3], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste3");
-    RoomInit(&pMap[4], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste3");
-    RoomInit(&pMap[5], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste3");
-    RoomInit(&pMap[6], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste3");
-    RoomInit(&pMap[7], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste3");
-    RoomInit(&pMap[8], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste3");
-    RoomInit(&pMap[9], 1, 1, 1, 1, NONE, NONE, 1, 1, "Teste9");
+    RoomInit(&pMap[0], NONE, 11, NONE, NONE, NONE, NONE, NONE, NONE, "Entrada");
+    RoomInit(&pMap[1], 0, 2, 7, NONE, NONE, NONE, NONE, NONE, "Jardim");
+    RoomInit(&pMap[2], 2, NONE, NONE, 3, NONE, NONE, NONE, NONE, "Pátio");
+    RoomInit(&pMap[3], 5, 4, 2, NONE, NONE, NONE, NONE, NONE, "Salão");
+    RoomInit(&pMap[4], 3, NONE, NONE, NONE, NONE, NONE, NONE, NONE, "Grande Salão");
+    RoomInit(&pMap[5], NONE, 3, 6, NONE, NONE, NONE, NONE, NONE, "Cozinha");
+    RoomInit(&pMap[6], NONE, NONE, NONE, 5, NONE, NONE, NONE, NONE, "Padaria");
+    RoomInit(&pMap[7], 8, 10, NONE, 1, NONE, NONE, NONE, NONE, "Patio");
+    RoomInit(&pMap[8], NONE, 7, 9, 1, NONE, NONE, NONE, NONE, "Capela");
+    RoomInit(&pMap[9], NONE, NONE, 8, NONE, NONE, NONE, NONE, NONE, "Armeiro");
+    RoomInit(&pMap[10], 7, NONE, NONE, 11, NONE, NONE, NONE, NONE, "Quarto");
+    RoomInit(&pMap[11], NONE, NONE, 10, NONE, NONE, NONE, NONE, NONE, "Sala do Tesouro");
 
-    return 10;
+    return 12;
 }
 
 void MapInit(struct Room *pMap[]){
