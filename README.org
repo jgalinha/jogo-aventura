@@ -57,6 +57,7 @@ Definiçao de variaveis e constantes a usar no codigo
 
 short int su = 0; /* Varriável para controlar o SuperUser */
 short int nRoomMap; /* Number of rooms in the map */
+short int endGame = 1; /* variável para controlar o fim do jogo */
 
 #+END_SRC
 
