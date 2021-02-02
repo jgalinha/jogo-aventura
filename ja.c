@@ -94,6 +94,8 @@ int main(int argc, char *argv[]) {
     
     if (argc > 1)
         SuperUserInit(argc, argv, &player);
+
+    PlayerStats(player);
     
     return 0;
 }
@@ -115,7 +117,10 @@ void PlayerInit(struct Player *pPlayer) { // (ref:PlayerInit)
 
 /* Function to show the player stats */
 void PlayerStats(struct Player player) {
-    printf("*** Player %s Stats ***", player.name);
+    printf("*** Player %s Stats ***\n", player.name);
+    printf("Energy: %hd\n", player.energy);
+    printf("Location: %hd\n", player.location);
+    printf("Object: %hd\n", player.object);
 }
 
 /*****************************************************************************/
@@ -213,11 +218,15 @@ void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
             pPlayer->energy = ((short)atoi(argv[2]) > 0) ? (short)atoi(argv[2]) : pPlayer->energy;
         // verifica se o parametro da localização foi passado
         if ( argc > 3 )
+            // verifica se o paramametro passado é possivel de converter para short inteiro
+            // se for define, caso contrario usa o valor por defeito
             pPlayer->location = ((short)atoi(argv[3]) > 0) ? (short)atoi(argv[3]) : pPlayer->location;
         // verifica se o parametro do objecto foi passado
         if ( argc > 4 )
+            // verifica se o paramametro passado é possivel de converter para short inteiro
+            // se for define, caso contrario usa o valor por defeito
             pPlayer->object = ((short)atoi(argv[3]) > 0) ? (short)atoi(argv[3]) : pPlayer->object;
         su = 1;
-        printf("MODO SUPER USER ATIVO");
+        printf("MODO SUPER USER ATIVO\n");
     }
 }
