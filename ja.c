@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #define MAX_NAME 50 /* Maximum name length */ 
 #define MAX_OBJECT_NAME 10 /* Maximum object name lenght */
@@ -19,6 +20,7 @@
 
 short int su = 0; /* Varriável para controlar o SuperUser */
 short int nRoomMap; /* Number of rooms in the map */
+short int endGame = 1; /* variável para controlar o fim do jogo */
 
 /* Player Structure */
 struct Player {
@@ -56,7 +58,7 @@ struct Monster {
 
 /* Player Functions **********************************************************/
 void PlayerInit(struct Player *pPlayer); 
-void PlayerStats(struct Player player);
+void PlayerStats(struct Player player, struct Room map[]);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(struct Room *pMap); 
 void RoomInit(struct Room *pRoom, short int north, short int south,
@@ -73,11 +75,12 @@ void MonsterInit (struct Monster *pMonster, short int energy,
                   short int location); 
 /* Super User Functions ******************************************************/
 void SuperUserInit(int argc, char *argv[], struct Player *pPlayer);
+/* Helper Functions **********************************************************/
+void ClrScr();
 /*****************************************************************************/
 
 int main(int argc, char *argv[]) {
 
-    
     struct Player player;
     struct Room map[MAX_ROOMS];
     struct Object objects[MAX_ROOMS];
@@ -95,8 +98,11 @@ int main(int argc, char *argv[]) {
     if (argc > 1)
         SuperUserInit(argc, argv, &player);
 
-    PlayerStats(player);
-    
+    while (endGame){
+        ClrScr();
+        PlayerStats(player, map);
+    }
+
     return 0;
 }
 
@@ -106,21 +112,34 @@ int main(int argc, char *argv[]) {
 
 /* Function to init the player */
 void PlayerInit(struct Player *pPlayer) { // (ref:PlayerInit)
+    ClrScr();
+    printf("Olá, bem vindo ao jogo aventura!\n");
     printf("Qual o seu nome aventureiro? \n -> ");
     scanf("%s", (*pPlayer).name);
     (*pPlayer).energy = INITIAL_ENERGY_PLAYER;
     (*pPlayer).location = INITIAL_PLAYER_LOCATION;
     (*pPlayer).object = NONE; 
     (*pPlayer).treasure = NONE;
-    printf("\nBoa Sorte %s! Vai precisar...\n", (*pPlayer).name);
-}
+    ClrScr();
+    printf("Olá %s, bem vindo ao jogo aventura, o seu objectivo é capturar o tesouro perdido no castelo!\n", (*pPlayer).name);
+    sleep(1);
+    printf("\nO castelo é habitado por um monstro, tenha cuidado...\n");
+    sleep(1);
+    printf("\nNo castelo poderá encontrar vários objectos que o podem ajudar no seu percurso, mas apenas poderá transportar um objecto, por isso faça a escolha certa.\n");
+    sleep(1);
+    printf("\nOs objectos ficam sempre onde os deixar, por isso pode ser importante recordar.");
+    sleep(1);
+    printf("\nPronto para começar a sua aventura?");
+    printf("\nBoa Sorte %s! Vai precisar...", (*pPlayer).name);
+    sleep(2);
+    fflush(stdout);
+    
+}   
 
 /* Function to show the player stats */
-void PlayerStats(struct Player player) {
-    printf("*** Player %s Stats ***\n", player.name);
-    printf("Energy: %hd\n", player.energy);
-    printf("Location: %hd\n", player.location);
-    printf("Object: %hd\n", player.object);
+void PlayerStats(struct Player player, struct Room map[]) {
+    printf("%s encontra-se na %s, atualmente tem %hd de energia!",
+           player.name, map[player.location].description, player.energy);
 }
 
 /*****************************************************************************/
@@ -141,7 +160,7 @@ short int InitDefaultMap(struct Room *pMap) {
     RoomInit(&pMap[8], NONE, 7, 9, 1, NONE, NONE, NONE, NONE, "Capela");
     RoomInit(&pMap[9], NONE, NONE, 8, NONE, NONE, NONE, NONE, NONE, "Armeiro");
     RoomInit(&pMap[10], 7, NONE, NONE, 11, NONE, NONE, NONE, NONE, "Quarto");
-    RoomInit(&pMap[11], NONE, NONE, 10, NONE, NONE, NONE, NONE, NONE, "Sala do Tesouro");
+    RoomInit(&pMap[11], NONE, NONE, 10, NONE, NONE, NONE, NONE, 1, "Sala do Tesouro");
 
     return 12;
 }
@@ -231,4 +250,8 @@ void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
         su = 1;
         printf("MODO SUPER USER ATIVO\n");
     }
+}
+
+void ClrScr() {
+    system("@cls||clear");
 }
