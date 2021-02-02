@@ -65,6 +65,7 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
               short int east, short int west, short int up, short int down,
               short int object, short int treasure,
               char description[MAX_TEXT_ROOM_DESCRIPTION]);
+int CheckValidMove(int destination, struct Room room);
 /* Object Functions **********************************************************/
 short int ObjectsInit(struct Object *pObjects[]); 
 void ObjectInit(struct Object *pObject, char name[MAX_OBJECT_NAME],
@@ -86,6 +87,7 @@ int main(int argc, char *argv[]) {
     struct Object objects[MAX_ROOMS];
     struct Monster monster;
     short int nObjects;
+    short int play;
     /* Player Initializations */
     PlayerInit(&player);
     /* Object Initialization */
@@ -94,13 +96,17 @@ int main(int argc, char *argv[]) {
     nRoomMap = InitDefaultMap(map);
     /* Monster Initialization */
     MonsterInit(&monster, 100, -1);
-    
+
+    ClrScr();
     if (argc > 1)
         SuperUserInit(argc, argv, &player);
 
     while (endGame){
-        ClrScr();
         PlayerStats(player, map);
+        printf("\nO que deseja fazer? \n-> ");
+        scanf(" %hd", &play);
+        printf("Move %d", CheckValidMove(play, map[player.location]));
+        endGame = 0;
     }
 
     return 0;
@@ -142,6 +148,10 @@ void PlayerStats(struct Player player, struct Room map[]) {
            player.name, map[player.location].description, player.energy);
 }
 
+int MovePLayer(int location, struct Player *pPlayer, struct Room *pMap[]) {
+    
+}
+
 /*****************************************************************************/
 /*                               Map Functions                               */
 /*****************************************************************************/
@@ -149,7 +159,7 @@ void PlayerStats(struct Player player, struct Room map[]) {
 /* Function to initialize one default map ************************************/
 short int InitDefaultMap(struct Room *pMap) {
     /* TODO Create the default map layout */
-    RoomInit(&pMap[0], NONE, 11, NONE, NONE, NONE, NONE, NONE, NONE, "Entrada");
+    RoomInit(&pMap[0], NONE, 1, NONE, NONE, NONE, NONE, NONE, NONE, "Entrada");
     RoomInit(&pMap[1], 0, 2, 7, NONE, NONE, NONE, NONE, NONE, "Jardim");
     RoomInit(&pMap[2], 2, NONE, NONE, 3, NONE, NONE, NONE, NONE, "Pátio");
     RoomInit(&pMap[3], 5, 4, 2, NONE, NONE, NONE, NONE, NONE, "Salão");
@@ -186,6 +196,27 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
     pRoom->treasure = treasure;
     strcpy(pRoom->description, description);
     
+}
+
+/* Function to verify if the move to another room is valid */
+int CheckValidMove(int destination, struct Room room){
+    if (destination < nRoomMap) {
+        printf("%d", room.south);
+        if (room.north == destination)
+            return 1;
+        if (room.south == destination)
+            return 1;
+        if (room.east == destination)
+            return 1;
+        if (room.west == destination)
+            return 1;
+        if (room.up == destination)
+            return 1;
+        if (room.down == destination)
+            return 1;
+    }
+
+    return 0;
 }
 
 /* Function to initialize de objects vector */
@@ -253,5 +284,5 @@ void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
 }
 
 void ClrScr() {
-    system("@cls||clear");
+    system("clear");
 }
