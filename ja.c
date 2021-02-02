@@ -206,12 +206,17 @@ void MonsterInit (struct Monster *pMonster, short int energy,
 
 void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
     if ( atoi(argv[1]) == 1765 ){
+        // verifica se o parametro da energia foi passado
         if ( argc > 2 ) 
-            pPlayer->energy = (atoi(argv[2]) > 0) ? atoi(argv[2]) : pPlayer->energy;
+            // verifica se o paramametro passado é possivel de converter para short inteiro
+            // se for define, caso contrario usa o valor por defeito
+            pPlayer->energy = ((short)atoi(argv[2]) > 0) ? (short)atoi(argv[2]) : pPlayer->energy;
+        // verifica se o parametro da localização foi passado
         if ( argc > 3 )
-            pPlayer->location = (atoi(argv[3]) > 0) ? atoi(argv[3]) : pPlayer->location;
+            pPlayer->location = ((short)atoi(argv[3]) > 0) ? (short)atoi(argv[3]) : pPlayer->location;
+        // verifica se o parametro do objecto foi passado
         if ( argc > 4 )
-            pPlayer->object = (atoi(argv[3]) > 0) ? atoi(argv[3]) : pPlayer->object;
+            pPlayer->object = ((short)atoi(argv[3]) > 0) ? (short)atoi(argv[3]) : pPlayer->object;
         su = 1;
         printf("MODO SUPER USER ATIVO");
     }
