@@ -59,6 +59,7 @@ struct Monster {
 /* Player Functions **********************************************************/
 void PlayerInit(struct Player *pPlayer); 
 void PlayerStats(struct Player player, struct Room map[]);
+void MovePLayer(int location, struct Player *pPlayer, struct Room room);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(struct Room *pMap); 
 void RoomInit(struct Room *pRoom, short int north, short int south,
@@ -105,8 +106,7 @@ int main(int argc, char *argv[]) {
         PlayerStats(player, map);
         printf("\nO que deseja fazer? \n-> ");
         scanf(" %hd", &play);
-        printf("Move %d", CheckValidMove(play, map[player.location]));
-        endGame = 0;
+        MovePLayer(play, &player, map[player.location]);
     }
 
     return 0;
@@ -148,8 +148,13 @@ void PlayerStats(struct Player player, struct Room map[]) {
            player.name, map[player.location].description, player.energy);
 }
 
-int MovePLayer(int location, struct Player *pPlayer, struct Room *pMap[]) {
-    
+void MovePLayer(int location, struct Player *pPlayer, struct Room room) {
+    if (CheckValidMove(location, room)) {
+        pPlayer->location = location;
+    } else {
+        printf("%s esse movimento não é possível, tente novamente\n", pPlayer->name);
+        sleep(2);
+    }
 }
 
 /*****************************************************************************/
@@ -161,7 +166,7 @@ short int InitDefaultMap(struct Room *pMap) {
     /* TODO Create the default map layout */
     RoomInit(&pMap[0], NONE, 1, NONE, NONE, NONE, NONE, NONE, NONE, "Entrada");
     RoomInit(&pMap[1], 0, 2, 7, NONE, NONE, NONE, NONE, NONE, "Jardim");
-    RoomInit(&pMap[2], 2, NONE, NONE, 3, NONE, NONE, NONE, NONE, "Pátio");
+    RoomInit(&pMap[2], 1, NONE, NONE, 3, NONE, NONE, NONE, NONE, "Pátio");
     RoomInit(&pMap[3], 5, 4, 2, NONE, NONE, NONE, NONE, NONE, "Salão");
     RoomInit(&pMap[4], 3, NONE, NONE, NONE, NONE, NONE, NONE, NONE, "Grande Salão");
     RoomInit(&pMap[5], NONE, 3, 6, NONE, NONE, NONE, NONE, NONE, "Cozinha");
@@ -201,7 +206,6 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
 /* Function to verify if the move to another room is valid */
 int CheckValidMove(int destination, struct Room room){
     if (destination < nRoomMap) {
-        printf("%d", room.south);
         if (room.north == destination)
             return 1;
         if (room.south == destination)
