@@ -61,6 +61,7 @@ void PlayerInit(struct Player *pPlayer);
 void PlayerStats(struct Player player, struct Room map[]);
 void MovePLayer(int location, struct Player *pPlayer, struct Room room);
 void PlayerOptions(struct Room map, struct Player player, struct Monster monster);
+void PlayerChoice(char choice);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(struct Room *pMap); 
 void RoomInit(struct Room *pRoom, short int north, short int south,
@@ -120,7 +121,9 @@ int main(int argc, char *argv[]) {
         // Wait fot the player choice
         printf("\nO que deseja fazer? \n-> ");
         scanf(" %c", &choice);
+        PlayerChoice(choice);
         //MovePLayer(play, &player, map[player.location]);
+        fflush(stdout);
         ClrScr();
     }
 
@@ -178,8 +181,20 @@ void MovePLayer(int location, struct Player *pPlayer, struct Room room) {
 }
 
 void PlayerOptions(struct Room map, struct Player player, struct Monster monster) {
-    char msg[200] = "\n\nAs suas opções: \n- 'N', 'S', 'E', 'O' para se mover para Norte, Sul, Este e Oeste respectivamente";
+    char msg[200] = "\n\nAs suas opções:";
 
+    if (map.north >= 0)
+        strcat(msg, "\n- 'N' para se mover para norte");
+
+    if (map.south >= 0)
+        strcat(msg, "\n- 'S' para se mover para sul");
+
+    if (map.east >= 0)
+        strcat(msg, "\n- 'E' para se mover para este");
+
+    if (map.west >= 0)
+        strcat(msg, "\n- 'O' para se mover para norte");
+        
     if (map.object >= 0)
         strcat(msg, "\n- 'A' para apanhar o objecto");
     
@@ -192,7 +207,8 @@ void PlayerOptions(struct Room map, struct Player player, struct Monster monster
     puts(msg);
 }
 
-void PlayerChoice() {
+void PlayerChoice(char choice) {
+    printf("\nEscolha - %c", choice);
 }
 
 /*****************************************************************************/
