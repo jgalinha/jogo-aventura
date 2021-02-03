@@ -65,11 +65,12 @@ typedef struct Monster {
 void PlayerInit(PLAYER *pPlayer); 
 void PlayerStats(PLAYER player, ROOM map[],
                  OBJECT objects[]);
-void MovePLayer(int location, PLAYER *pPlayer, ROOM *pRoom);
+void MovePLayer(int location, PLAYER *pPlayer, ROOM *pRoom, MONSTER *pMonster);
 char PlayerOptions(ROOM map, PLAYER player,
                    MONSTER monster);
 void PlayerChoice(char choice, PLAYER *pPlayer, ROOM *pRoom,
                   MONSTER *pMonster, OBJECT *pObjects);
+void PickUpTreasure(ROOM *pRoom, MONSTER *pMonster);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(ROOM *pMap); 
 void RoomInit(ROOM *pRoom, short int north, short int south,
@@ -120,7 +121,7 @@ int main(int argc, char *argv[]) {
         // Call the SU init function
         SuperUserInit(argc, argv, &player);
 
-    while (endGame){
+    while (endGame != 1){
         // Show the current status of the player
         PlayerStats(player, map, objects);
         // Check and show the objects in the room
@@ -185,8 +186,16 @@ void PlayerStats(PLAYER player, ROOM map[], OBJECT objects[]) {
     }
 }
 
-void MovePLayer(int location, PLAYER *pPlayer, ROOM *pRoom) {
+void MovePLayer(int location, PLAYER *pPlayer, ROOM *pRoom, MONSTER *pMonster) {
+    int r;
     if (CheckValidMove(location, pRoom)) {
+        if(pMonster->location == pPlayer->location && pMonster->energy > 0){
+            /* random damage from 0-40 from monster */
+            r = random() % MONSTER_MAX_DAMAGE; 
+            /* apply damage to the player */
+            pPlayer->energy -= r;
+            printf("\nO monstro atacou-o e retirou-lhe %i de energia", r);
+        }
         pPlayer->location = location;
     } else {
         printf("\n%s esse movimento não é possível, tente novamente\n", pPlayer->name);
@@ -239,10 +248,15 @@ char PlayerOptions(ROOM map, PLAYER player, MONSTER monster) {
     if (map.object >= 0)
         strcat(msg, "\n- 'A' para apanhar o objecto");
     
-    // Checj if the monster is in the room and add option to fight or run
+    // Check if the monster is in the room and add option to fight or run
     if (monster.location == player.location && monster.energy > 0) {
         printf("\nEncontrou o monstro, lute ou fuja!");
         strcat(msg, "\n- 'L' para lutar com o monstro");
+    }
+    // check if the treasure is in the room
+    if (map.treasure == 1){
+        printf("\nEncontrou o tesouro!");
+        strcat(msg, "\n- 'T' para apanhar o tesouro");
     }
     
     // Puts msg to the console and flush stdout
@@ -261,22 +275,22 @@ void PlayerChoice(char choice, PLAYER *pPlayer, ROOM *pRoom,
     char ch = tolower(choice);
     switch (ch) {
         // move north
-        case 'n': MovePLayer(pRoom->north, pPlayer, pRoom);
+        case 'n': MovePLayer(pRoom->north, pPlayer, pRoom, pMonster);
             break;
         // move south
-        case 's': MovePLayer(pRoom->south, pPlayer, pRoom);
+        case 's': MovePLayer(pRoom->south, pPlayer, pRoom, pMonster);
             break;
         // move east
-        case 'e': MovePLayer(pRoom->east, pPlayer, pRoom);
+        case 'e': MovePLayer(pRoom->east, pPlayer, pRoom, pMonster);
             break;
         // move west
-        case 'o': MovePLayer(pRoom->west, pPlayer, pRoom);
+        case 'o': MovePLayer(pRoom->west, pPlayer, pRoom, pMonster);
             break;
         // move up
-        case 'c': MovePLayer(pRoom->up, pPlayer, pRoom);
+        case 'c': MovePLayer(pRoom->up, pPlayer, pRoom, pMonster);
             break;        
         // move down
-        case 'b': MovePLayer(pRoom->down, pPlayer, pRoom);
+        case 'b': MovePLayer(pRoom->down, pPlayer, pRoom, pMonster);
             break;
         // pick up object
         case 'a': PickUpObject(pPlayer, pRoom);
@@ -284,6 +298,28 @@ void PlayerChoice(char choice, PLAYER *pPlayer, ROOM *pRoom,
         // fight monster
         case 'l': MonsterFight(pPlayer, pMonster,  &pObjects[pPlayer->object]);
             break;
+        case 't': PickUpTreasure(pRoom, pMonster);
+            break;
+    }
+}
+
+/* Funcion: PickupTreasure
+* _______________________
+* function to pickup the treasure
+*
+*   *pRoom: room pointer
+*   *pMonster: monster pointer
+*
+ */
+void PickUpTreasure(ROOM *pRoom, MONSTER *pMonster) {
+    if(pRoom->treasure == 1){
+        if (pMonster->energy > 0){
+            printf("\nO monstro ainda está vivo, o tesouro só se abre depois "
+                   "de matar o monstro!");
+        } else {
+            printf("\nPARABÉNS!!! Conseguiu apanhar o tesouro!\n\nFIM");
+            endGame = 1;
+        }
     }
 }
 
@@ -493,11 +529,12 @@ void MonsterMove(MONSTER *pMonster, ROOM *pRoom, PLAYER player){
                 /* move the monster */
                 pMonster->location = r;
                 break;
+            } else {
+                /* generate a new random room */
+                r = rand() % nRoomMap;
+                /* add another try to the counter */
+                x += 1;
             }
-            /* generate a new random room */
-            r = rand() % nRoomMap;
-            /* add another try to the counter */
-            x += 1;
         } while (move == 0 && x <= 4);
     }
 }
