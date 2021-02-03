@@ -37,6 +37,7 @@ clean: rm ja *.o
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <ctype.h> // to use tolower()
 
 #+END_SRC
 
@@ -134,7 +135,7 @@ void PlayerInit(struct Player *pPlayer);
 void PlayerStats(struct Player player, struct Room map[]);
 void MovePLayer(int location, struct Player *pPlayer, struct Room room);
 void PlayerOptions(struct Room map, struct Player player, struct Monster monster);
-void PlayerChoice(char choice);
+void PlayerChoice(char choice, struct Player *player, struct Room room);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(struct Room *pMap); 
 void RoomInit(struct Room *pRoom, short int north, short int south,
@@ -202,8 +203,7 @@ int main(int argc, char *argv[]) {
         // Wait fot the player choice
         printf("\nO que deseja fazer? \n-> ");
         scanf(" %c", &choice);
-        PlayerChoice(choice);
-        //MovePLayer(play, &player, map[player.location]);
+        PlayerChoice(choice, &player, map[player.location]);
         fflush(stdout);
         ClrScr();
     }
@@ -249,7 +249,7 @@ void PlayerInit(struct Player *pPlayer) { // (ref:PlayerInit)
 
 /* Function to show the player stats */
 void PlayerStats(struct Player player, struct Room map[]) {
-    printf("%s encontra-se na %s, atualmente tem %hd de energia!",
+    printf("\n%s encontra-se na %s, atualmente tem %hd de energia!",
            player.name, map[player.location].description, player.energy);
     if (player.object >= 0) {
         printf("\nObjecto: %hd", player.object);
@@ -262,7 +262,7 @@ void MovePLayer(int location, struct Player *pPlayer, struct Room room) {
     if (CheckValidMove(location, room)) {
         pPlayer->location = location;
     } else {
-        printf("%s esse movimento não é possível, tente novamente\n", pPlayer->name);
+        printf("\n%s esse movimento não é possível, tente novamente\n", pPlayer->name);
         sleep(1);
     }
 }
@@ -278,28 +278,44 @@ Função que verifica as várias opções possíveis em cada "room" queo jogador
 void PlayerOptions(struct Room map, struct Player player, struct Monster monster) {
     char msg[200] = "\n\nAs suas opções:";
 
+    // Check if can move north and add options to msg
     if (map.north >= 0)
         strcat(msg, "\n- 'N' para se mover para norte");
 
+    // Check if can move south and add option to msg
     if (map.south >= 0)
         strcat(msg, "\n- 'S' para se mover para sul");
 
+    // Check if can move east and add option to msg
     if (map.east >= 0)
         strcat(msg, "\n- 'E' para se mover para este");
 
+    // Check if can move west and add option to msg
     if (map.west >= 0)
-        strcat(msg, "\n- 'O' para se mover para norte");
+        strcat(msg, "\n- 'O' para se mover para oeste");
+
+    // Check if can move up and add option to msg
+    if (map.up >= 0)
+        strcat(msg, "\n- 'C' para se mover para cima");
+
+    // Check if can move down and add option to msg
+    if (map.down >= 0)
+        strcat(msg, "\n- 'B' para se mover para baixo");
         
+    // Check if an object exists in the room and add option to msg
     if (map.object >= 0)
         strcat(msg, "\n- 'A' para apanhar o objecto");
     
+    // Checj if the monster is in the room and add option to fight or run
     if (monster.location == player.location) {
         printf("\nEncontrou o monstro, lute ou fuja!");
         strcat(msg, "\n- 'L' para lutar com o monstro");
         strcat(msg, "\n- 'F' para fugir com o monstro");
     }
     
+    // Puts msg to the console and flush stdout
     puts(msg);
+    fflush(stdout);
 }
 #+END_SRC
 
@@ -309,12 +325,38 @@ Função que com base na escolha de movimento do jogador, chama a função corre
 
 #+CAPTION: PlayerChoice
 #+BEGIN_SRC C +n
-void PlayerChoice(char choice) {
-    printf("\nEscolha - %c", choice);
+// Function to execute the player choices
+void PlayerChoice(char choice, struct Player *pPlayer, struct Room room) {
+    // convert the input char to lower
+    char ch = tolower(choice);
+    switch (ch) {
+        // move north
+        case 'n': MovePLayer(room.north, pPlayer, room);
+            break;
+        // move south
+        case 's': MovePLayer(room.south, pPlayer, room);
+            break;
+        // move east
+        case 'e': MovePLayer(room.east, pPlayer, room);
+            break;
+        // move west
+        case 'o': MovePLayer(room.west, pPlayer, room);
+            break;
+        // move up
+        case 'c': MovePLayer(room.up, pPlayer, room);
+            break;        
+        // move down
+        case 'b': MovePLayer(room.down, pPlayer, room);
+            break;
+        // pick up object
+        case 'a': break;
+        // fight monster
+        case 'l': break;
+        // run away from monster
+        case 'f': break;
+    }
 }
 #+END_SRC
-
-#+RESULTS[b4be6b11335ec16bab3c48af6a16ad87c7aba8de]:
 
 * Funções do =map=
 
@@ -368,7 +410,7 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
 
 /* Function to verify if the move to another room is valid */
 int CheckValidMove(int destination, struct Room room){
-    if (destination < nRoomMap) {
+    if (destination < nRoomMap && destination >= 0) {
         if (room.north == destination)
             return 1;
         if (room.south == destination)
@@ -536,7 +578,7 @@ Função auxiliar para limpeza do terminal
 #+CAPTION: ClrScr
 #+BEGIN_SRC C +n
 void ClrScr() {
-    system("clear");
+    //system("clear");
 }
 #+END_SRC
 
