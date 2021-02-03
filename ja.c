@@ -454,7 +454,7 @@ void MonsterFight(PLAYER *pPlayer, MONSTER *pMonster,
         /* apply damage to the player */
         pPlayer->energy -= r;
         printf("\nO monstro atacou-o e retirou-lhe %i de energia", r);
-        if (pPlayer->energy <= 0)
+        if (pPlayer->energy <= 0 || pMonster->energy <= 0)
             endGame = 0;
     }
     fflush(stdout);
