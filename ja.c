@@ -72,6 +72,7 @@ short int ObjectsInit(struct Object *pObjects[]);
 void ObjectInit(struct Object *pObject, char name[MAX_OBJECT_NAME],
                 short int power); 
 short int DefaultObjectsInit(struct Object *pObject); 
+void CheckObject(struct Room room, struct Object object[]);
 /* Monster Functions *********************************************************/
 void MonsterInit (struct Monster *pMonster, short int energy,
                   short int location); 
@@ -104,6 +105,9 @@ int main(int argc, char *argv[]) {
 
     while (endGame){
         PlayerStats(player, map);
+        if (su)
+            printf("\nLocalização do monstro: %s", map[monster.location].description);
+        CheckObject(map[player.location], objects);
         printf("\nO que deseja fazer? \n-> ");
         scanf(" %hd", &play);
         MovePLayer(play, &player, map[player.location]);
@@ -146,6 +150,11 @@ void PlayerInit(struct Player *pPlayer) { // (ref:PlayerInit)
 void PlayerStats(struct Player player, struct Room map[]) {
     printf("%s encontra-se na %s, atualmente tem %hd de energia!",
            player.name, map[player.location].description, player.energy);
+    if (player.object >= 0) {
+        printf("\nObjecto: %hd", player.object);
+    } else {
+        printf("\nProcure um objecto, pode ajuda-lo!");
+    }
 }
 
 void MovePLayer(int location, struct Player *pPlayer, struct Room room) {
@@ -164,7 +173,7 @@ void MovePLayer(int location, struct Player *pPlayer, struct Room room) {
 /* Function to initialize one default map ************************************/
 short int InitDefaultMap(struct Room *pMap) {
     /* TODO Create the default map layout */
-    RoomInit(&pMap[0], NONE, 1, NONE, NONE, NONE, NONE, NONE, NONE, "Entrada");
+    RoomInit(&pMap[0], NONE, 1, NONE, NONE, NONE, NONE, 0, NONE, "Entrada");
     RoomInit(&pMap[1], 0, 2, 7, NONE, NONE, NONE, NONE, NONE, "Jardim");
     RoomInit(&pMap[2], 1, NONE, NONE, 3, NONE, NONE, NONE, NONE, "Pátio");
     RoomInit(&pMap[3], 5, 4, 2, NONE, NONE, NONE, NONE, NONE, "Salão");
@@ -247,6 +256,12 @@ short int DefaultObjectsInit(struct Object *pObject) {
     ObjectInit(&pObject[6], "poção mágica", -80);
 
     return 7;
+}
+
+/* Function that checks if the given room has an object an inform the player */
+void CheckObject(struct Room room, struct Object object[]){
+    if(room.object >= 0)
+        printf("\nExiste um/a %s no %s!", object[room.object].name, room.description);
 }
 
 void MonsterInit (struct Monster *pMonster, short int energy,
