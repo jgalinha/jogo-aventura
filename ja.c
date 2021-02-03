@@ -83,14 +83,14 @@ void SuperUserInit(int argc, char *argv[], struct Player *pPlayer);
 void ClrScr();
 /*****************************************************************************/
 
+// Main function
 int main(int argc, char *argv[]) {
 
-    struct Player player;
-    struct Room map[MAX_ROOMS];
-    struct Object objects[MAX_ROOMS];
-    struct Monster monster;
-    short int nObjects;
-    short int play;
+    struct Player player; // Struct for the player stats
+    struct Room map[MAX_ROOMS]; // Struct for the map rooms information
+    struct Object objects[MAX_ROOMS]; // Struct for the objects in the map
+    struct Monster monster; // Struct for the monster
+    char choice; // Variable to store the choice to play
     /* Player Initializations */
     PlayerInit(&player);
     /* Object Initialization */
@@ -101,18 +101,26 @@ int main(int argc, char *argv[]) {
     MonsterInit(&monster, 100, -1);
 
     ClrScr();
+    // Check if game was called with arguments
     if (argc > 1)
+        // Call the SU init function
         SuperUserInit(argc, argv, &player);
 
     while (endGame){
+        // Show the current status of the player
         PlayerStats(player, map);
+        // Check and show the objects in the room
         CheckObject(map[player.location], objects);
+        // Check if SU is enable
         if (su)
+            // If SU is enable show the monster location
             printf("\nLocalização do monstro: %s", map[monster.location].description);
+        // Show the player option to play
         PlayerOptions(map[player.location], player, monster);
+        // Wait fot the player choice
         printf("\nO que deseja fazer? \n-> ");
-        scanf(" %hd", &play);
-        MovePLayer(play, &player, map[player.location]);
+        scanf(" %c", &choice);
+        //MovePLayer(play, &player, map[player.location]);
         ClrScr();
     }
 
@@ -165,7 +173,7 @@ void MovePLayer(int location, struct Player *pPlayer, struct Room room) {
         pPlayer->location = location;
     } else {
         printf("%s esse movimento não é possível, tente novamente\n", pPlayer->name);
-        sleep(2);
+        sleep(1);
     }
 }
 
@@ -182,6 +190,9 @@ void PlayerOptions(struct Room map, struct Player player, struct Monster monster
     }
     
     puts(msg);
+}
+
+void PlayerChoice() {
 }
 
 /*****************************************************************************/
