@@ -13,12 +13,14 @@
 
 #define MAX_NAME 50 /* Maximum name length */ 
 #define MAX_OBJECT_NAME 10 /* Maximum object name lenght */
-#define MAX_TEXT_ROOM_DESCRIPTION 500 /* Maximum lenght for the room description */
+#define MAX_TEXT_ROOM_DESCRIPTION 500 /* Max lenght for the room description */
 #define MAX_ROOMS 100 /* Maximum rooms in each map */
 #define INITIAL_ENERGY_PLAYER 100 /* Default start player energy */
 #define INITIAL_PLAYER_LOCATION 0 /* Defaule start player location */
 #define NONE -1 /* Constant do start empty things */
 #define MAX 500 /* Constant to use for variable length */
+#define MONSTER_MAX_DAMAGE 40 /* Constant to set the maximum monster damage */
+#define OBJECT_MAX_DAMAGE 5 /* Constant to set the max damage to the objects */
 
 short int su = NONE; /* Varriável para controlar o SuperUser */
 short int nRoomMap = NONE; /* Number of rooms in the map */
@@ -48,10 +50,10 @@ struct Room {
 };
 
 /* Object Structure */
-struct Object {
+typedef struct Object {
     char name[MAX_OBJECT_NAME];
     short int power;
-};
+} OBJECT;
 
 /* Monster Structure */
 struct Monster {
@@ -61,10 +63,13 @@ struct Monster {
 
 /* Player Functions **********************************************************/
 void PlayerInit(struct Player *pPlayer); 
-void PlayerStats(struct Player player, struct Room map[], struct Object objects[]);
+void PlayerStats(struct Player player, struct Room map[],
+                 struct Object objects[]);
 void MovePLayer(int location, struct Player *pPlayer, struct Room *pRoom);
-char PlayerOptions(struct Room map, struct Player player, struct Monster monster);
-void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom);
+char PlayerOptions(struct Room map, struct Player player,
+                   struct Monster monster);
+void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom,
+                  struct Monster *pMonster, OBJECT *pObjects);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(struct Room *pMap); 
 void RoomInit(struct Room *pRoom, short int north, short int south,
@@ -82,6 +87,8 @@ void PickUpObject(struct Player *pPlayer, struct Room *pRoom);
 /* Monster Functions *********************************************************/
 void MonsterInit (struct Monster *pMonster, short int energy,
                   short int location); 
+void MonsterFight(struct Player *pPlayer, struct Monster *pMonster,
+                  OBJECT *pObject);
 /* Super User Functions ******************************************************/
 void SuperUserInit(int argc, char *argv[], struct Player *pPlayer);
 void SuperUser(struct Monster monster, struct Room map[]);
@@ -94,7 +101,7 @@ int main(int argc, char *argv[]) {
 
     struct Player player; // Struct for the player stats
     struct Room map[MAX_ROOMS]; // Struct for the map rooms information
-    struct Object objects[MAX_ROOMS]; // Struct for the objects in the map
+    OBJECT objects[MAX_ROOMS]; // Struct for the objects in the map
     struct Monster monster; // Struct for the monster
     char choice; // Variable to store the choice to play
     /* Player Initializations */
@@ -121,7 +128,7 @@ int main(int argc, char *argv[]) {
         // Show the player option to play
         choice = PlayerOptions(map[player.location], player, monster);
         // Wait fot the player choice
-        PlayerChoice(choice, &player, &map[player.location]);
+        PlayerChoice(choice, &player, &map[player.location], &monster, objects);
         fflush(stdout);
         ClrScr();
     }
@@ -164,7 +171,8 @@ void PlayerStats(struct Player player, struct Room map[], struct Object objects[
     printf("\n%s encontra-se na %s, atualmente tem %hd de energia!",
            player.name, map[player.location].description, player.energy);
     if (player.object >= 0) {
-        printf("\nObjecto: %s", objects[player.object].name);
+        printf("\nObjecto: %s (Poder: %hd)", objects[player.object].name,
+               objects[player.object].power);
     } else {
         printf("\nProcure um objecto, pode ajuda-lo!");
     }
@@ -241,7 +249,8 @@ char PlayerOptions(struct Room map, struct Player player, struct Monster monster
 }
 
 // Function to execute the player choices
-void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom) {
+void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom,
+                  struct Monster *pMonster, OBJECT *pObjects) {
     // convert the input char to lower
     char ch = tolower(choice);
     switch (ch) {
@@ -267,7 +276,8 @@ void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom) {
         case 'a': PickUpObject(pPlayer, pRoom);
             break;
         // fight monster
-        case 'l': break;
+        case 'l': MonsterFight(pPlayer, pMonster,  &pObjects[pPlayer->object]);
+            break;
         // run away from monster
         case 'f': break;
     }
@@ -288,7 +298,7 @@ short int InitDefaultMap(struct Room *pMap) {
     RoomInit(&pMap[5], NONE, 3, 6, NONE, NONE, NONE, 3, NONE, "Cozinha");
     RoomInit(&pMap[6], NONE, NONE, NONE, 5, NONE, NONE, 5, NONE, "Padaria");
     RoomInit(&pMap[7], 8, 10, NONE, 1, NONE, NONE, NONE, NONE, "Patio");
-    RoomInit(&pMap[8], NONE, 7, 9, 1, NONE, NONE, 7, NONE, "Capela");
+    RoomInit(&pMap[8], NONE, 7, NONE, 9, NONE, NONE, 7, NONE, "Capela");
     RoomInit(&pMap[9], NONE, NONE, 8, NONE, NONE, NONE, 4, NONE, "Armeiro");
     RoomInit(&pMap[10], 7, NONE, NONE, 11, NONE, NONE, 6, NONE, "Quarto");
     RoomInit(&pMap[11], NONE, NONE, 10, NONE, NONE, NONE, NONE, 1, "Sala do Tesouro");
@@ -360,7 +370,7 @@ short int DefaultObjectsInit(struct Object *pObject) {
     ObjectInit(&pObject[4], "alabarda", 35);
     ObjectInit(&pObject[5], "machado", 45);
     ObjectInit(&pObject[6], "besta", 20);
-    ObjectInit(&pObject[7], "poção mágica", -80);
+    ObjectInit(&pObject[7], "pocao magica", -80);
 
     return 8;
 }
@@ -405,6 +415,51 @@ void MonsterInit (struct Monster *pMonster, short int energy,
     pMonster->location = location;
 }
 
+/*
+* Function:     MonsterFight
+* __________________________
+* make the fights with the monster, each time the player attack the monster
+* the monster fight back, and the object looses power
+*
+* *pPlayer: player pointer
+* *pMonster: monster pointer
+* *pObject: object pointer
+*
+*/
+void MonsterFight(struct Player *pPlayer, struct Monster *pMonster,
+                  OBJECT *pObject) {
+    int r; /* variable to use for the random numbers */
+
+    // check if the player and monster are alive
+    if (pPlayer->energy > 0 && pMonster->energy > 0){
+        // check of the player has an object
+        if (pPlayer->object >= 0) {
+            // apply damage to the monster
+            pMonster->energy -= pObject->power;
+            printf("\nBoa fez %hd de dano no monstro!",
+                   pObject->power);
+            /* random damage from 0-40 from monster */
+            r = random() % MONSTER_MAX_DAMAGE; 
+            /* apply damage to the player */
+            pPlayer->energy -= r;
+            printf("\nO monstro atacou-o e retirou-lhe %i de energia", r);
+            /* random value to apply damage to object */
+            r = random() % OBJECT_MAX_DAMAGE; 
+            // apply damage to the player object
+            pObject->power -= r;
+            if (pObject->power <= 0) {
+                pPlayer->object = NONE;
+                printf("\nO seu objecto não resistiu e foi destruido!");
+                printf("\nFuja e procure outro objecto!");
+            }
+            
+        } else {
+            printf("\nNão tem arma para lutar, fuja e encontre uma arma!");
+        }
+    }
+    fflush(stdout);
+}
+
 void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
     if ( atoi(argv[1]) == 1765 ){
         // verifica se o parametro da energia foi passado
@@ -441,6 +496,7 @@ void SuperUser(struct Monster monster, struct Room map[]) {
     if (su == 1)
         // If SU is enable show the monster location
         printf("\nLocalização do monstro: %s", map[monster.location].description);
+        printf("\nEnergia do monstro: %hd", monster.energy);
 }
 
 void ClrScr() {
