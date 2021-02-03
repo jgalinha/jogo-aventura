@@ -1,6 +1,6 @@
 all: ja
 
 ja: ja.c
-	gcc ja.c -o ja
+	gcc ja.c -o ja -pthread
 
 clean: rm ja *.o
