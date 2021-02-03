@@ -59,6 +59,7 @@ Definiçao de variaveis e constantes a usar no codigo
 short int su = 0; /* Varriável para controlar o SuperUser */
 short int nRoomMap; /* Number of rooms in the map */
 short int endGame = 1; /* variável para controlar o fim do jogo */
+short int nObjects = NONE; /* 
 
 #+END_SRC
 
@@ -132,23 +133,24 @@ struct Monster {
 
 /* Player Functions **********************************************************/
 void PlayerInit(struct Player *pPlayer); 
-void PlayerStats(struct Player player, struct Room map[]);
-void MovePLayer(int location, struct Player *pPlayer, struct Room room);
+void PlayerStats(struct Player player, struct Room map[], struct Object objects[]);
+void MovePLayer(int location, struct Player *pPlayer, struct Room *pRoom);
 void PlayerOptions(struct Room map, struct Player player, struct Monster monster);
-void PlayerChoice(char choice, struct Player *player, struct Room room);
+void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(struct Room *pMap); 
 void RoomInit(struct Room *pRoom, short int north, short int south,
               short int east, short int west, short int up, short int down,
               short int object, short int treasure,
               char description[MAX_TEXT_ROOM_DESCRIPTION]);
-int CheckValidMove(int destination, struct Room room);
+int CheckValidMove(int destination, struct Room *pRoom);
 /* Object Functions **********************************************************/
 short int ObjectsInit(struct Object *pObjects[]); 
 void ObjectInit(struct Object *pObject, char name[MAX_OBJECT_NAME],
                 short int power); 
 short int DefaultObjectsInit(struct Object *pObject); 
 void CheckObject(struct Room room, struct Object object[]);
+void PickUpObject(struct Player *pPlayer, struct Room *pRoom);
 /* Monster Functions *********************************************************/
 void MonsterInit (struct Monster *pMonster, short int energy,
                   short int location); 
@@ -177,7 +179,7 @@ int main(int argc, char *argv[]) {
     /* Player Initializations */
     PlayerInit(&player);
     /* Object Initialization */
-    DefaultObjectsInit(objects);
+    nObjects = DefaultObjectsInit(objects);
     /* Map Initialization */
     nRoomMap = InitDefaultMap(map);
     /* Monster Initialization */
@@ -191,7 +193,7 @@ int main(int argc, char *argv[]) {
 
     while (endGame){
         // Show the current status of the player
-        PlayerStats(player, map);
+        PlayerStats(player, map, objects);
         // Check and show the objects in the room
         CheckObject(map[player.location], objects);
         // Check if SU is enable
@@ -203,7 +205,7 @@ int main(int argc, char *argv[]) {
         // Wait fot the player choice
         printf("\nO que deseja fazer? \n-> ");
         scanf(" %c", &choice);
-        PlayerChoice(choice, &player, map[player.location]);
+        PlayerChoice(choice, &player, &map[player.location]);
         fflush(stdout);
         ClrScr();
     }
@@ -248,18 +250,18 @@ void PlayerInit(struct Player *pPlayer) { // (ref:PlayerInit)
 }   
 
 /* Function to show the player stats */
-void PlayerStats(struct Player player, struct Room map[]) {
+void PlayerStats(struct Player player, struct Room map[], struct Object objects[]) {
     printf("\n%s encontra-se na %s, atualmente tem %hd de energia!",
            player.name, map[player.location].description, player.energy);
     if (player.object >= 0) {
-        printf("\nObjecto: %hd", player.object);
+        printf("\nObjecto: %s", objects[player.object].name);
     } else {
         printf("\nProcure um objecto, pode ajuda-lo!");
     }
 }
 
-void MovePLayer(int location, struct Player *pPlayer, struct Room room) {
-    if (CheckValidMove(location, room)) {
+void MovePLayer(int location, struct Player *pPlayer, struct Room *pRoom) {
+    if (CheckValidMove(location, pRoom)) {
         pPlayer->location = location;
     } else {
         printf("\n%s esse movimento não é possível, tente novamente\n", pPlayer->name);
@@ -326,30 +328,31 @@ Função que com base na escolha de movimento do jogador, chama a função corre
 #+CAPTION: PlayerChoice
 #+BEGIN_SRC C +n
 // Function to execute the player choices
-void PlayerChoice(char choice, struct Player *pPlayer, struct Room room) {
+void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom) {
     // convert the input char to lower
     char ch = tolower(choice);
     switch (ch) {
         // move north
-        case 'n': MovePLayer(room.north, pPlayer, room);
+        case 'n': MovePLayer(pRoom->north, pPlayer, pRoom);
             break;
         // move south
-        case 's': MovePLayer(room.south, pPlayer, room);
+        case 's': MovePLayer(pRoom->south, pPlayer, pRoom);
             break;
         // move east
-        case 'e': MovePLayer(room.east, pPlayer, room);
+        case 'e': MovePLayer(pRoom->east, pPlayer, pRoom);
             break;
         // move west
-        case 'o': MovePLayer(room.west, pPlayer, room);
+        case 'o': MovePLayer(pRoom->west, pPlayer, pRoom);
             break;
         // move up
-        case 'c': MovePLayer(room.up, pPlayer, room);
+        case 'c': MovePLayer(pRoom->up, pPlayer, pRoom);
             break;        
         // move down
-        case 'b': MovePLayer(room.down, pPlayer, room);
+        case 'b': MovePLayer(pRoom->down, pPlayer, pRoom);
             break;
         // pick up object
-        case 'a': break;
+        case 'a': PickUpObject(pPlayer, pRoom);
+            break;
         // fight monster
         case 'l': break;
         // run away from monster
@@ -357,6 +360,8 @@ void PlayerChoice(char choice, struct Player *pPlayer, struct Room room) {
     }
 }
 #+END_SRC
+
+#+RESULTS[6e9192c708008aba470a1a75d5785ffde9ffc4ec]:
 
 * Funções do =map=
 
@@ -370,16 +375,16 @@ void PlayerChoice(char choice, struct Player *pPlayer, struct Room room) {
 short int InitDefaultMap(struct Room *pMap) {
     /* TODO Create the default map layout */
     RoomInit(&pMap[0], NONE, 1, NONE, NONE, NONE, NONE, 0, NONE, "Entrada");
-    RoomInit(&pMap[1], 0, 2, 7, NONE, NONE, NONE, NONE, NONE, "Jardim");
+    RoomInit(&pMap[1], 0, 2, 7, NONE, NONE, NONE, 1, NONE, "Jardim");
     RoomInit(&pMap[2], 1, NONE, NONE, 3, NONE, NONE, NONE, NONE, "Pátio");
     RoomInit(&pMap[3], 5, 4, 2, NONE, NONE, NONE, NONE, NONE, "Salão");
-    RoomInit(&pMap[4], 3, NONE, NONE, NONE, NONE, NONE, NONE, NONE, "Grande Salão");
-    RoomInit(&pMap[5], NONE, 3, 6, NONE, NONE, NONE, NONE, NONE, "Cozinha");
-    RoomInit(&pMap[6], NONE, NONE, NONE, 5, NONE, NONE, NONE, NONE, "Padaria");
+    RoomInit(&pMap[4], 3, NONE, NONE, NONE, NONE, NONE, 2, NONE, "Grande Salão");
+    RoomInit(&pMap[5], NONE, 3, 6, NONE, NONE, NONE, 3, NONE, "Cozinha");
+    RoomInit(&pMap[6], NONE, NONE, NONE, 5, NONE, NONE, 5, NONE, "Padaria");
     RoomInit(&pMap[7], 8, 10, NONE, 1, NONE, NONE, NONE, NONE, "Patio");
-    RoomInit(&pMap[8], NONE, 7, 9, 1, NONE, NONE, NONE, NONE, "Capela");
-    RoomInit(&pMap[9], NONE, NONE, 8, NONE, NONE, NONE, NONE, NONE, "Armeiro");
-    RoomInit(&pMap[10], 7, NONE, NONE, 11, NONE, NONE, NONE, NONE, "Quarto");
+    RoomInit(&pMap[8], NONE, 7, 9, 1, NONE, NONE, 7, NONE, "Capela");
+    RoomInit(&pMap[9], NONE, NONE, 8, NONE, NONE, NONE, 4, NONE, "Armeiro");
+    RoomInit(&pMap[10], 7, NONE, NONE, 11, NONE, NONE, 6, NONE, "Quarto");
     RoomInit(&pMap[11], NONE, NONE, 10, NONE, NONE, NONE, NONE, 1, "Sala do Tesouro");
 
     return 12;
@@ -400,7 +405,7 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
     pRoom->south = south;
     pRoom->east = east;
     pRoom->west = west;
-    pRoom->up = up;
+    pRoom->up = up;5
     pRoom->down = down;
     pRoom->object = object;
     pRoom->treasure = treasure;
@@ -409,19 +414,19 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
 }
 
 /* Function to verify if the move to another room is valid */
-int CheckValidMove(int destination, struct Room room){
+int CheckValidMove(int destination, struct Room *pRoom){
     if (destination < nRoomMap && destination >= 0) {
-        if (room.north == destination)
+        if (pRoom->north == destination)
             return 1;
-        if (room.south == destination)
+        if (pRoom->south == destination)
             return 1;
-        if (room.east == destination)
+        if (pRoom->east == destination)
             return 1;
-        if (room.west == destination)
+        if (pRoom->west == destination)
             return 1;
-        if (room.up == destination)
+        if (pRoom->up == destination)
             return 1;
-        if (room.down == destination)
+        if (pRoom->down == destination)
             return 1;
     }
 
@@ -475,10 +480,10 @@ short int DefaultObjectsInit(struct Object *pObject) {
     ObjectInit(&pObject[3], "sopa", -3);
     ObjectInit(&pObject[4], "alabarda", 35);
     ObjectInit(&pObject[5], "machado", 45);
-    ObjectInit(&pObject[5], "besta", 20);
-    ObjectInit(&pObject[6], "poção mágica", -80);
+    ObjectInit(&pObject[6], "besta", 20);
+    ObjectInit(&pObject[7], "poção mágica", -80);
 
-    return 7;
+    return 8;
 }
 #+END_SRC
     
@@ -492,6 +497,27 @@ Função que verifica se num dado "room" existe um objecto, informando o jogador
 void CheckObject(struct Room room, struct Object object[]){
     if(room.object >= 0)
         printf("\nExiste um/a %s no/a %s!", object[room.object].name, room.description);
+}
+#+END_SRC
+
+** PickUpObject
+
+Função para o player apanhar os objectos.
+
+A função, apanha o objecto caso ele exista na localização do jogador, caso o jogador tenha outro objecto em mãos, o mesmo fica no lugar do objecto apanhado.
+
+#+CAPTION: PickUpObject
+#+BEGIN_SRC C +n
+void PickUpObject(struct Player *pPlayer, struct Room *pRoom) {
+    short int tempObj;
+    if (pRoom->object >= 0 && pRoom->object <= nObjects) {
+        tempObj = pPlayer->object;
+        pPlayer->object = pRoom->object;
+        pRoom->object = tempObj;
+    } else {
+        printf("\nNão foi possivel apanhar o objecto! Ou o objecto não existe!");
+    }
+    fflush(stdout);
 }
 #+END_SRC
 
@@ -578,6 +604,7 @@ Função auxiliar para limpeza do terminal
 #+CAPTION: ClrScr
 #+BEGIN_SRC C +n
 void ClrScr() {
+    fflush(stdout);
     //system("clear");
 }
 #+END_SRC

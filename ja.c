@@ -22,6 +22,7 @@
 short int su = 0; /* Varriável para controlar o SuperUser */
 short int nRoomMap; /* Number of rooms in the map */
 short int endGame = 1; /* variável para controlar o fim do jogo */
+short int nObjects = NONE; /*
 
 /* Player Structure */
 struct Player {
@@ -59,23 +60,24 @@ struct Monster {
 
 /* Player Functions **********************************************************/
 void PlayerInit(struct Player *pPlayer); 
-void PlayerStats(struct Player player, struct Room map[]);
-void MovePLayer(int location, struct Player *pPlayer, struct Room room);
+void PlayerStats(struct Player player, struct Room map[], struct Object objects[]);
+void MovePLayer(int location, struct Player *pPlayer, struct Room *pRoom);
 void PlayerOptions(struct Room map, struct Player player, struct Monster monster);
-void PlayerChoice(char choice, struct Player *player, struct Room room);
+void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(struct Room *pMap); 
 void RoomInit(struct Room *pRoom, short int north, short int south,
               short int east, short int west, short int up, short int down,
               short int object, short int treasure,
               char description[MAX_TEXT_ROOM_DESCRIPTION]);
-int CheckValidMove(int destination, struct Room room);
+int CheckValidMove(int destination, struct Room *pRoom);
 /* Object Functions **********************************************************/
 short int ObjectsInit(struct Object *pObjects[]); 
 void ObjectInit(struct Object *pObject, char name[MAX_OBJECT_NAME],
                 short int power); 
 short int DefaultObjectsInit(struct Object *pObject); 
 void CheckObject(struct Room room, struct Object object[]);
+void PickUpObject(struct Player *pPlayer, struct Room *pRoom);
 /* Monster Functions *********************************************************/
 void MonsterInit (struct Monster *pMonster, short int energy,
                   short int location); 
@@ -96,7 +98,7 @@ int main(int argc, char *argv[]) {
     /* Player Initializations */
     PlayerInit(&player);
     /* Object Initialization */
-    DefaultObjectsInit(objects);
+    nObjects = DefaultObjectsInit(objects);
     /* Map Initialization */
     nRoomMap = InitDefaultMap(map);
     /* Monster Initialization */
@@ -110,7 +112,7 @@ int main(int argc, char *argv[]) {
 
     while (endGame){
         // Show the current status of the player
-        PlayerStats(player, map);
+        PlayerStats(player, map, objects);
         // Check and show the objects in the room
         CheckObject(map[player.location], objects);
         // Check if SU is enable
@@ -122,7 +124,7 @@ int main(int argc, char *argv[]) {
         // Wait fot the player choice
         printf("\nO que deseja fazer? \n-> ");
         scanf(" %c", &choice);
-        PlayerChoice(choice, &player, map[player.location]);
+        PlayerChoice(choice, &player, &map[player.location]);
         fflush(stdout);
         ClrScr();
     }
@@ -161,18 +163,18 @@ void PlayerInit(struct Player *pPlayer) { // (ref:PlayerInit)
 }   
 
 /* Function to show the player stats */
-void PlayerStats(struct Player player, struct Room map[]) {
+void PlayerStats(struct Player player, struct Room map[], struct Object objects[]) {
     printf("\n%s encontra-se na %s, atualmente tem %hd de energia!",
            player.name, map[player.location].description, player.energy);
     if (player.object >= 0) {
-        printf("\nObjecto: %hd", player.object);
+        printf("\nObjecto: %s", objects[player.object].name);
     } else {
         printf("\nProcure um objecto, pode ajuda-lo!");
     }
 }
 
-void MovePLayer(int location, struct Player *pPlayer, struct Room room) {
-    if (CheckValidMove(location, room)) {
+void MovePLayer(int location, struct Player *pPlayer, struct Room *pRoom) {
+    if (CheckValidMove(location, pRoom)) {
         pPlayer->location = location;
     } else {
         printf("\n%s esse movimento não é possível, tente novamente\n", pPlayer->name);
@@ -224,30 +226,31 @@ void PlayerOptions(struct Room map, struct Player player, struct Monster monster
 }
 
 // Function to execute the player choices
-void PlayerChoice(char choice, struct Player *pPlayer, struct Room room) {
+void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom) {
     // convert the input char to lower
     char ch = tolower(choice);
     switch (ch) {
         // move north
-        case 'n': MovePLayer(room.north, pPlayer, room);
+        case 'n': MovePLayer(pRoom->north, pPlayer, pRoom);
             break;
         // move south
-        case 's': MovePLayer(room.south, pPlayer, room);
+        case 's': MovePLayer(pRoom->south, pPlayer, pRoom);
             break;
         // move east
-        case 'e': MovePLayer(room.east, pPlayer, room);
+        case 'e': MovePLayer(pRoom->east, pPlayer, pRoom);
             break;
         // move west
-        case 'o': MovePLayer(room.west, pPlayer, room);
+        case 'o': MovePLayer(pRoom->west, pPlayer, pRoom);
             break;
         // move up
-        case 'c': MovePLayer(room.up, pPlayer, room);
+        case 'c': MovePLayer(pRoom->up, pPlayer, pRoom);
             break;        
         // move down
-        case 'b': MovePLayer(room.down, pPlayer, room);
+        case 'b': MovePLayer(pRoom->down, pPlayer, pRoom);
             break;
         // pick up object
-        case 'a': break;
+        case 'a': PickUpObject(pPlayer, pRoom);
+            break;
         // fight monster
         case 'l': break;
         // run away from monster
@@ -263,7 +266,7 @@ void PlayerChoice(char choice, struct Player *pPlayer, struct Room room) {
 short int InitDefaultMap(struct Room *pMap) {
     /* TODO Create the default map layout */
     RoomInit(&pMap[0], NONE, 1, NONE, NONE, NONE, NONE, 0, NONE, "Entrada");
-    RoomInit(&pMap[1], 0, 2, 7, NONE, NONE, NONE, NONE, NONE, "Jardim");
+    RoomInit(&pMap[1], 0, 2, 7, NONE, NONE, NONE, 1, NONE, "Jardim");
     RoomInit(&pMap[2], 1, NONE, NONE, 3, NONE, NONE, NONE, NONE, "Pátio");
     RoomInit(&pMap[3], 5, 4, 2, NONE, NONE, NONE, NONE, NONE, "Salão");
     RoomInit(&pMap[4], 3, NONE, NONE, NONE, NONE, NONE, NONE, NONE, "Grande Salão");
@@ -302,19 +305,19 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
 }
 
 /* Function to verify if the move to another room is valid */
-int CheckValidMove(int destination, struct Room room){
+int CheckValidMove(int destination, struct Room *pRoom){
     if (destination < nRoomMap && destination >= 0) {
-        if (room.north == destination)
+        if (pRoom->north == destination)
             return 1;
-        if (room.south == destination)
+        if (pRoom->south == destination)
             return 1;
-        if (room.east == destination)
+        if (pRoom->east == destination)
             return 1;
-        if (room.west == destination)
+        if (pRoom->west == destination)
             return 1;
-        if (room.up == destination)
+        if (pRoom->up == destination)
             return 1;
-        if (room.down == destination)
+        if (pRoom->down == destination)
             return 1;
     }
 
@@ -351,6 +354,18 @@ short int DefaultObjectsInit(struct Object *pObject) {
 void CheckObject(struct Room room, struct Object object[]){
     if(room.object >= 0)
         printf("\nExiste um/a %s no/a %s!", object[room.object].name, room.description);
+}
+
+void PickUpObject(struct Player *pPlayer, struct Room *pRoom) {
+    short int tempObj;
+    if (pRoom->object >= 0 && pRoom->object <= nObjects) {
+        tempObj = pPlayer->object;
+        pPlayer->object = pRoom->object;
+        pRoom->object = tempObj;
+    } else {
+        printf("\nNão foi possivel apanhar o objecto! Ou o objecto não existe!");
+    }
+    fflush(stdout);
 }
 
 void MonsterInit (struct Monster *pMonster, short int energy,
@@ -392,5 +407,6 @@ void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
 }
 
 void ClrScr() {
+    fflush(stdout);
     //system("clear");
 }
