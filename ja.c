@@ -84,6 +84,7 @@ void MonsterInit (struct Monster *pMonster, short int energy,
                   short int location); 
 /* Super User Functions ******************************************************/
 void SuperUserInit(int argc, char *argv[], struct Player *pPlayer);
+void SuperUser(struct Monster monster, struct Room map[]);
 /* Helper Functions **********************************************************/
 void ClrScr();
 /*****************************************************************************/
@@ -116,10 +117,7 @@ int main(int argc, char *argv[]) {
         PlayerStats(player, map, objects);
         // Check and show the objects in the room
         CheckObject(map[player.location], objects);
-        // Check if SU is enable
-        if (su == 1)
-            // If SU is enable show the monster location
-            printf("\nLocalização do monstro: %s", map[monster.location].description);
+        SuperUser(monster, map);
         // Show the player option to play
         choice = PlayerOptions(map[player.location], player, monster);
         // Wait fot the player choice
@@ -187,7 +185,7 @@ void MovePLayer(int location, struct Player *pPlayer, struct Room *pRoom) {
 *   verify the possible moves for the player in the specific room, and print
 *   the options to the player
 *
-*   map: copy of map vector
+*   map: copy of the actual room
 *   player: copy of player vector
 *   monster: copy of monster vector
 *
@@ -425,8 +423,24 @@ void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
             // se for define, caso contrario usa o valor por defeito
             pPlayer->object = ((short)atoi(argv[3]) > 0) ? (short)atoi(argv[3]) : pPlayer->object;
         su = 1;
-        printf("\nMODO SUPER USER ATIVO\n");
+        printf("\nMODO SUPER USER ATIVO");
     }
+}
+
+/*
+ * Function:    SuperUser
+ * ______________________
+ *  control the Super User mode
+ *
+ *  monster: copy of the monster vector
+ *  map[]: copy of the map vector
+ *
+ */
+void SuperUser(struct Monster monster, struct Room map[]) {
+    // Check if SU is enable
+    if (su == 1)
+        // If SU is enable show the monster location
+        printf("\nLocalização do monstro: %s", map[monster.location].description);
 }
 
 void ClrScr() {
