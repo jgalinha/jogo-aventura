@@ -55,10 +55,11 @@ Definiçao de variaveis e constantes a usar no codigo
 #define INITIAL_ENERGY_PLAYER 100 /* Default start player energy */
 #define INITIAL_PLAYER_LOCATION 0 /* Defaule start player location */
 #define NONE -1 /* Constant do start empty things */
+#define MAX 500 /* Constant to use for variable length */
 
-short int su = 0; /* Varriável para controlar o SuperUser */
-short int nRoomMap; /* Number of rooms in the map */
-short int endGame = 1; /* variável para controlar o fim do jogo */
+short int su = NONE; /* Varriável para controlar o SuperUser */
+short int nRoomMap = NONE; /* Number of rooms in the map */
+short int endGame = NONE; /* variável para controlar o fim do jogo */
 short int nObjects = NONE; /* 
 
 #+END_SRC
@@ -197,7 +198,7 @@ int main(int argc, char *argv[]) {
         // Check and show the objects in the room
         CheckObject(map[player.location], objects);
         // Check if SU is enable
-        if (su)
+        if (su == 1)
             // If SU is enable show the monster location
             printf("\nLocalização do monstro: %s", map[monster.location].description);
         // Show the player option to play
@@ -277,8 +278,19 @@ Função que verifica as várias opções possíveis em cada "room" queo jogador
 
 #+CAPTION: PlayerOptions
 #+BEGIN_SRC C +n
+/*
+,* Function: PlayerOptions
+,* -----------------------
+,*  verify the possible moves for the player in the specific room, and print
+,*  the options to the player
+,*
+,*  map: copy of map vector
+,*  player: copy of player vector
+,*  monster: copy of monster vector
+,*
+,*/
 void PlayerOptions(struct Room map, struct Player player, struct Monster monster) {
-    char msg[200] = "\n\nAs suas opções:";
+    char msg[MAX] = "\n\nAs suas opções:";
 
     // Check if can move north and add options to msg
     if (map.north >= 0)
@@ -361,8 +373,6 @@ void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom) {
 }
 #+END_SRC
 
-#+RESULTS[6e9192c708008aba470a1a75d5785ffde9ffc4ec]:
-
 * Funções do =map=
 
 #+BEGIN_SRC C +n
@@ -405,7 +415,7 @@ void RoomInit(struct Room *pRoom, short int north, short int south,
     pRoom->south = south;
     pRoom->east = east;
     pRoom->west = west;
-    pRoom->up = up;5
+    pRoom->up = up;
     pRoom->down = down;
     pRoom->object = object;
     pRoom->treasure = treasure;
@@ -509,13 +519,19 @@ A função, apanha o objecto caso ele exista na localização do jogador, caso o
 #+CAPTION: PickUpObject
 #+BEGIN_SRC C +n
 void PickUpObject(struct Player *pPlayer, struct Room *pRoom) {
+    // temp variable to store the player object
     short int tempObj;
+    // check if the room as an object and if the object is valid
     if (pRoom->object >= 0 && pRoom->object <= nObjects) {
+        // copy the player objecto to temp variable
         tempObj = pPlayer->object;
+        // copy the room object to the player object variable
         pPlayer->object = pRoom->object;
+        // copy the temp variavle to the room variable 
         pRoom->object = tempObj;
     } else {
         printf("\nNão foi possivel apanhar o objecto! Ou o objecto não existe!");
+        sleep(2);
     }
     fflush(stdout);
 }
@@ -590,7 +606,7 @@ void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
             // se for define, caso contrario usa o valor por defeito
             pPlayer->object = ((short)atoi(argv[3]) > 0) ? (short)atoi(argv[3]) : pPlayer->object;
         su = 1;
-        printf("MODO SUPER USER ATIVO\n");
+        printf("\nMODO SUPER USER ATIVO\n");
     }
 }
 #+END_SRC

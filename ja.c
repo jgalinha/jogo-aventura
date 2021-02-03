@@ -18,10 +18,11 @@
 #define INITIAL_ENERGY_PLAYER 100 /* Default start player energy */
 #define INITIAL_PLAYER_LOCATION 0 /* Defaule start player location */
 #define NONE -1 /* Constant do start empty things */
+#define MAX 500 /* Constant to use for variable length */
 
-short int su = 0; /* Varriável para controlar o SuperUser */
-short int nRoomMap; /* Number of rooms in the map */
-short int endGame = 1; /* variável para controlar o fim do jogo */
+short int su = NONE; /* Varriável para controlar o SuperUser */
+short int nRoomMap = NONE; /* Number of rooms in the map */
+short int endGame = NONE; /* variável para controlar o fim do jogo */
 short int nObjects = NONE; /*
 
 /* Player Structure */
@@ -116,7 +117,7 @@ int main(int argc, char *argv[]) {
         // Check and show the objects in the room
         CheckObject(map[player.location], objects);
         // Check if SU is enable
-        if (su)
+        if (su == 1)
             // If SU is enable show the monster location
             printf("\nLocalização do monstro: %s", map[monster.location].description);
         // Show the player option to play
@@ -182,8 +183,19 @@ void MovePLayer(int location, struct Player *pPlayer, struct Room *pRoom) {
     }
 }
 
+/*
+* Function: PlayerOptions
+* -----------------------
+*  verify the possible moves for the player in the specific room, and print
+*  the options to the player
+*
+*  map: copy of map vector
+*  player: copy of player vector
+*  monster: copy of monster vector
+*
+*/
 void PlayerOptions(struct Room map, struct Player player, struct Monster monster) {
-    char msg[200] = "\n\nAs suas opções:";
+    char msg[MAX] = "\n\nAs suas opções:";
 
     // Check if can move north and add options to msg
     if (map.north >= 0)
@@ -269,13 +281,13 @@ short int InitDefaultMap(struct Room *pMap) {
     RoomInit(&pMap[1], 0, 2, 7, NONE, NONE, NONE, 1, NONE, "Jardim");
     RoomInit(&pMap[2], 1, NONE, NONE, 3, NONE, NONE, NONE, NONE, "Pátio");
     RoomInit(&pMap[3], 5, 4, 2, NONE, NONE, NONE, NONE, NONE, "Salão");
-    RoomInit(&pMap[4], 3, NONE, NONE, NONE, NONE, NONE, NONE, NONE, "Grande Salão");
-    RoomInit(&pMap[5], NONE, 3, 6, NONE, NONE, NONE, NONE, NONE, "Cozinha");
-    RoomInit(&pMap[6], NONE, NONE, NONE, 5, NONE, NONE, NONE, NONE, "Padaria");
+    RoomInit(&pMap[4], 3, NONE, NONE, NONE, NONE, NONE, 2, NONE, "Grande Salão");
+    RoomInit(&pMap[5], NONE, 3, 6, NONE, NONE, NONE, 3, NONE, "Cozinha");
+    RoomInit(&pMap[6], NONE, NONE, NONE, 5, NONE, NONE, 5, NONE, "Padaria");
     RoomInit(&pMap[7], 8, 10, NONE, 1, NONE, NONE, NONE, NONE, "Patio");
-    RoomInit(&pMap[8], NONE, 7, 9, 1, NONE, NONE, NONE, NONE, "Capela");
-    RoomInit(&pMap[9], NONE, NONE, 8, NONE, NONE, NONE, NONE, NONE, "Armeiro");
-    RoomInit(&pMap[10], 7, NONE, NONE, 11, NONE, NONE, NONE, NONE, "Quarto");
+    RoomInit(&pMap[8], NONE, 7, 9, 1, NONE, NONE, 7, NONE, "Capela");
+    RoomInit(&pMap[9], NONE, NONE, 8, NONE, NONE, NONE, 4, NONE, "Armeiro");
+    RoomInit(&pMap[10], 7, NONE, NONE, 11, NONE, NONE, 6, NONE, "Quarto");
     RoomInit(&pMap[11], NONE, NONE, 10, NONE, NONE, NONE, NONE, 1, "Sala do Tesouro");
 
     return 12;
@@ -344,10 +356,10 @@ short int DefaultObjectsInit(struct Object *pObject) {
     ObjectInit(&pObject[3], "sopa", -3);
     ObjectInit(&pObject[4], "alabarda", 35);
     ObjectInit(&pObject[5], "machado", 45);
-    ObjectInit(&pObject[5], "besta", 20);
-    ObjectInit(&pObject[6], "poção mágica", -80);
+    ObjectInit(&pObject[6], "besta", 20);
+    ObjectInit(&pObject[7], "poção mágica", -80);
 
-    return 7;
+    return 8;
 }
 
 /* Function that checks if the given room has an object an inform the player */
@@ -357,13 +369,19 @@ void CheckObject(struct Room room, struct Object object[]){
 }
 
 void PickUpObject(struct Player *pPlayer, struct Room *pRoom) {
+    // temp variable to store the player object
     short int tempObj;
+    // check if the room as an object and if the object is valid
     if (pRoom->object >= 0 && pRoom->object <= nObjects) {
+        // copy the player objecto to temp variable
         tempObj = pPlayer->object;
+        // copy the room object to the player object variable
         pPlayer->object = pRoom->object;
+        // copy the temp variavle to the room variable 
         pRoom->object = tempObj;
     } else {
         printf("\nNão foi possivel apanhar o objecto! Ou o objecto não existe!");
+        sleep(2);
     }
     fflush(stdout);
 }
@@ -402,7 +420,7 @@ void SuperUserInit(int argc, char *argv[], struct Player *pPlayer){
             // se for define, caso contrario usa o valor por defeito
             pPlayer->object = ((short)atoi(argv[3]) > 0) ? (short)atoi(argv[3]) : pPlayer->object;
         su = 1;
-        printf("MODO SUPER USER ATIVO\n");
+        printf("\nMODO SUPER USER ATIVO\n");
     }
 }
 
