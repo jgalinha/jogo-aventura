@@ -130,9 +130,14 @@ int main(int argc, char *argv[]) {
         choice = PlayerOptions(map[player.location], player, monster);
         // Wait fot the player choice
         PlayerChoice(choice, &player, &map[player.location], &monster, objects);
+        // Make the moster move
         MonsterMove(&monster, &map[player.location], player);
         fflush(stdout);
         ClrScr();
+    }
+
+    if (player.energy <= 0) {
+        printf("\nPERDEU!! Boa Sorte para a próxima!");
     }
 
     return 0;
@@ -235,7 +240,7 @@ char PlayerOptions(ROOM map, PLAYER player, MONSTER monster) {
         strcat(msg, "\n- 'A' para apanhar o objecto");
     
     // Checj if the monster is in the room and add option to fight or run
-    if (monster.location == player.location) {
+    if (monster.location == player.location && monster.energy > 0) {
         printf("\nEncontrou o monstro, lute ou fuja!");
         strcat(msg, "\n- 'L' para lutar com o monstro");
     }
@@ -454,8 +459,11 @@ void MonsterFight(PLAYER *pPlayer, MONSTER *pMonster,
         /* apply damage to the player */
         pPlayer->energy -= r;
         printf("\nO monstro atacou-o e retirou-lhe %i de energia", r);
-        if (pPlayer->energy <= 0 || pMonster->energy <= 0)
+        if (pPlayer->energy <= 0)
             endGame = 0;
+        if (pMonster->energy <= 0)
+            printf("\nBoa, conseguiu matar o monstro, agora é só"
+                   " encontrar o tesouro!");
     }
     fflush(stdout);
 }
@@ -472,7 +480,7 @@ void MonsterFight(PLAYER *pPlayer, MONSTER *pMonster,
 */
 void MonsterMove(MONSTER *pMonster, ROOM *pRoom, PLAYER player){
     /* check if the monster and the player are in the same room */
-    if(pMonster->location != player.location){
+    if(pMonster->location != player.location && pMonster->energy > 0){
         srand(time(0)); // rand seed
         int r = rand() % nRoomMap; // generate a random room for the move
         int move = 0; // control variable for the move
