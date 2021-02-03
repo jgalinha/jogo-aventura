@@ -89,6 +89,7 @@ void MonsterInit (MONSTER *pMonster, short int energy,
                   short int location); 
 void MonsterFight(PLAYER *pPlayer, MONSTER *pMonster,
                   OBJECT *pObject);
+void MonsterMove(MONSTER *pMonster, ROOM *pRoom, PLAYER player);
 /* Super User Functions ******************************************************/
 void SuperUserInit(int argc, char *argv[], PLAYER *pPlayer);
 void SuperUser(MONSTER monster, ROOM map[]);
@@ -129,6 +130,7 @@ int main(int argc, char *argv[]) {
         choice = PlayerOptions(map[player.location], player, monster);
         // Wait fot the player choice
         PlayerChoice(choice, &player, &map[player.location], &monster, objects);
+        MonsterMove(&monster, &map[player.location], player);
         fflush(stdout);
         ClrScr();
     }
@@ -236,7 +238,6 @@ char PlayerOptions(ROOM map, PLAYER player, MONSTER monster) {
     if (monster.location == player.location) {
         printf("\nEncontrou o monstro, lute ou fuja!");
         strcat(msg, "\n- 'L' para lutar com o monstro");
-        strcat(msg, "\n- 'F' para fugir com o monstro");
     }
     
     // Puts msg to the console and flush stdout
@@ -278,8 +279,6 @@ void PlayerChoice(char choice, PLAYER *pPlayer, ROOM *pRoom,
         // fight monster
         case 'l': MonsterFight(pPlayer, pMonster,  &pObjects[pPlayer->object]);
             break;
-        // run away from monster
-        case 'f': break;
     }
 }
 
@@ -459,6 +458,40 @@ void MonsterFight(PLAYER *pPlayer, MONSTER *pMonster,
             endGame = 0;
     }
     fflush(stdout);
+}
+
+/* Function:    MonsterMove
+* ------------------------
+* move the monster to a random location in the map if the player is not
+* presente in the room
+*
+*   *pMonster: pointer to the monster
+*   *pRoom: pointer to the room
+*   player: copy of the player struct
+*
+*/
+void MonsterMove(MONSTER *pMonster, ROOM *pRoom, PLAYER player){
+    /* check if the monster and the player are in the same room */
+    if(pMonster->location != player.location){
+        srand(time(0)); // rand seed
+        int r = rand() % nRoomMap; // generate a random room for the move
+        int move = 0; // control variable for the move
+        short int x = 0; // contro variable for the nunmber of tries
+        do {
+            /* check if the move is valid */
+            move = CheckValidMove(r, pRoom);
+            /* if move is valid, move the monster to the new location */
+            if (move == 1){
+                /* move the monster */
+                pMonster->location = r;
+                break;
+            }
+            /* generate a new random room */
+            r = rand() % nRoomMap;
+            /* add another try to the counter */
+            x += 1;
+        } while (move == 0 && x <= 4);
+    }
 }
 
 void SuperUserInit(int argc, char *argv[], PLAYER *pPlayer){
