@@ -60,6 +60,7 @@ struct Monster {
 void PlayerInit(struct Player *pPlayer); 
 void PlayerStats(struct Player player, struct Room map[]);
 void MovePLayer(int location, struct Player *pPlayer, struct Room room);
+void PlayerOptions(struct Room map, struct Player player, struct Monster monster);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(struct Room *pMap); 
 void RoomInit(struct Room *pRoom, short int north, short int south,
@@ -105,12 +106,14 @@ int main(int argc, char *argv[]) {
 
     while (endGame){
         PlayerStats(player, map);
+        CheckObject(map[player.location], objects);
         if (su)
             printf("\nLocalização do monstro: %s", map[monster.location].description);
-        CheckObject(map[player.location], objects);
+        PlayerOptions(map[player.location], player, monster);
         printf("\nO que deseja fazer? \n-> ");
         scanf(" %hd", &play);
         MovePLayer(play, &player, map[player.location]);
+        ClrScr();
     }
 
     return 0;
@@ -164,6 +167,21 @@ void MovePLayer(int location, struct Player *pPlayer, struct Room room) {
         printf("%s esse movimento não é possível, tente novamente\n", pPlayer->name);
         sleep(2);
     }
+}
+
+void PlayerOptions(struct Room map, struct Player player, struct Monster monster) {
+    char msg[200] = "\n\nAs suas opções: \n- 'N', 'S', 'E', 'O' para se mover para Norte, Sul, Este e Oeste respectivamente";
+
+    if (map.object >= 0)
+        strcat(msg, "\n- 'A' para apanhar o objecto");
+    
+    if (monster.location == player.location) {
+        printf("\nEncontrou o monstro, lute ou fuja!");
+        strcat(msg, "\n- 'L' para lutar com o monstro");
+        strcat(msg, "\n- 'F' para fugir com o monstro");
+    }
+    
+    puts(msg);
 }
 
 /*****************************************************************************/
@@ -261,7 +279,7 @@ short int DefaultObjectsInit(struct Object *pObject) {
 /* Function that checks if the given room has an object an inform the player */
 void CheckObject(struct Room room, struct Object object[]){
     if(room.object >= 0)
-        printf("\nExiste um/a %s no %s!", object[room.object].name, room.description);
+        printf("\nExiste um/a %s no/a %s!", object[room.object].name, room.description);
 }
 
 void MonsterInit (struct Monster *pMonster, short int energy,
