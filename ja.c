@@ -63,7 +63,7 @@ struct Monster {
 void PlayerInit(struct Player *pPlayer); 
 void PlayerStats(struct Player player, struct Room map[], struct Object objects[]);
 void MovePLayer(int location, struct Player *pPlayer, struct Room *pRoom);
-void PlayerOptions(struct Room map, struct Player player, struct Monster monster);
+char PlayerOptions(struct Room map, struct Player player, struct Monster monster);
 void PlayerChoice(char choice, struct Player *pPlayer, struct Room *pRoom);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(struct Room *pMap); 
@@ -121,10 +121,8 @@ int main(int argc, char *argv[]) {
             // If SU is enable show the monster location
             printf("\nLocalização do monstro: %s", map[monster.location].description);
         // Show the player option to play
-        PlayerOptions(map[player.location], player, monster);
+        choice = PlayerOptions(map[player.location], player, monster);
         // Wait fot the player choice
-        printf("\nO que deseja fazer? \n-> ");
-        scanf(" %c", &choice);
         PlayerChoice(choice, &player, &map[player.location]);
         fflush(stdout);
         ClrScr();
@@ -186,17 +184,20 @@ void MovePLayer(int location, struct Player *pPlayer, struct Room *pRoom) {
 /*
 * Function: PlayerOptions
 * -----------------------
-*  verify the possible moves for the player in the specific room, and print
-*  the options to the player
+*   verify the possible moves for the player in the specific room, and print
+*   the options to the player
 *
-*  map: copy of map vector
-*  player: copy of player vector
-*  monster: copy of monster vector
+*   map: copy of map vector
+*   player: copy of player vector
+*   monster: copy of monster vector
+*
+*   returns: the player choice
 *
 */
-void PlayerOptions(struct Room map, struct Player player, struct Monster monster) {
+char PlayerOptions(struct Room map, struct Player player, struct Monster monster) {
     char msg[MAX] = "\n\nAs suas opções:";
-
+    char choice;
+    
     // Check if can move north and add options to msg
     if (map.north >= 0)
         strcat(msg, "\n- 'N' para se mover para norte");
@@ -234,7 +235,11 @@ void PlayerOptions(struct Room map, struct Player player, struct Monster monster
     
     // Puts msg to the console and flush stdout
     puts(msg);
+    printf("\nO que deseja fazer? \n-> ");
+    scanf(" %c", &choice);
     fflush(stdout);
+
+    return choice;
 }
 
 // Function to execute the player choices
