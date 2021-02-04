@@ -28,7 +28,6 @@
 
 short int su = NONE; /* Varriável para controlar o SuperUser */
 short int nRoomMap = NONE; /* Number of rooms in the map */
-short int endGame = NONE; /* variável para controlar o fim do jogo */
 short int nObjects = NONE; /*
 
 /* Player Structure */
@@ -67,14 +66,14 @@ typedef struct Monster {
 
 /* Player Functions **********************************************************/
 void PlayerInit(PLAYER *pPlayer); 
-void PlayerStats(PLAYER player, ROOM map[],
+void PlayerStats(PLAYER *player, ROOM map[],
                  OBJECT objects[]);
 void MovePLayer(int location, PLAYER *pPlayer, ROOM *pRoom, MONSTER *pMonster);
-char PlayerOptions(ROOM map, PLAYER player,
+char PlayerOptions(ROOM map, PLAYER *player,
                    MONSTER *monster);
 void PlayerChoice(char choice, PLAYER *pPlayer, ROOM *pRoom,
-                  MONSTER *pMonster, OBJECT *pObjects);
-void PickUpTreasure(ROOM *pRoom, MONSTER *pMonster);
+                  MONSTER *pMonster, OBJECT *pObjects, int *endGame);
+void PickUpTreasure(ROOM *pRoom, MONSTER *pMonster, int *endGame);
 /* Map Functions *************************************************************/
 short int InitDefaultMap(ROOM *pMap); 
 void RoomInit(ROOM *pRoom, short int north, short int south,
@@ -93,8 +92,8 @@ void PickUpObject(PLAYER *pPlayer, ROOM *pRoom);
 void MonsterInit (MONSTER *pMonster, short int energy,
                   short int location); 
 void MonsterFight(PLAYER *pPlayer, MONSTER *pMonster,
-                  OBJECT *pObject);
-void MonsterMove(MONSTER *pMonster, ROOM *pRoom, PLAYER player);
+                  OBJECT *pObject, int *endGame);
+void MonsterMove(MONSTER *pMonster, ROOM *pRoom, PLAYER *player);
 /* Super User Functions ******************************************************/
 void SuperUserInit(int argc, char *argv[], PLAYER *pPlayer);
 void SuperUser(MONSTER *monster, ROOM map[]);
@@ -104,12 +103,17 @@ void ClrScr();
 
 // Main function
 int main(int argc, char *argv[]) {
+    /* variável para controlar o fim do jogo */
+    int *endGame = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE,
+                        MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
     int pid, childPid;
     sem_t *sem = mmap(NULL, sizeof(sem_t), PROT_READ | PROT_WRITE,
                           MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     //sem_t *sem_get = mmap(NULL, sizeof (sem_t), PROT_READ | PROT_WRITE,
     //                      MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    PLAYER player; // Struct for the player stats
+    PLAYER *player = mmap(NULL, sizeof(PLAYER), PROT_READ |
+                                     PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS,
+                                     -1, 0);; // Struct for the player stats
     ROOM map[MAX_ROOMS]; // Struct for the map rooms information
     OBJECT objects[MAX_ROOMS]; // Struct for the objects in the map
     MONSTER *monster = mmap(NULL, sizeof(MONSTER), PROT_READ |
@@ -121,7 +125,7 @@ int main(int argc, char *argv[]) {
     //sem_init(sem_get, 1, 0);
     
     /* Player Initializations */
-    PlayerInit(&player);
+    PlayerInit(player);
     /* Object Initialization */
     nObjects = DefaultObjectsInit(objects);
     /* Map Initialization */
@@ -133,44 +137,49 @@ int main(int argc, char *argv[]) {
     // Check if game was called with arguments
     if (argc > 1)
         // Call the SU init function
-        SuperUserInit(argc, argv, &player);
+        SuperUserInit(argc, argv, player);
 
     pid=fork();
     if (pid == 0){
-        while (endGame != 1){
+        while (*endGame != 1){
             // Make the moster move
             sleep(rand() % 10);
             sem_wait(sem);
-            MonsterMove(monster, &map[player.location], player);
+            MonsterMove(monster, &map[player->location], player);
             sem_post(sem);
         }
         exit(0);
     } else {
         pid=fork();
         if (pid == 0){
-            while (endGame != 1){
+            while (*endGame != 1){
                 // Show the current status of the player
                 PlayerStats(player, map, objects);
                 // Check and show the objects in the room
-                CheckObject(map[player.location], objects);
+                CheckObject(map[player->location], objects);
                 SuperUser(monster, map);
                 // Show the player option to play
                 sem_wait(sem);
-                choice = PlayerOptions(map[player.location], player, monster);
+                choice = PlayerOptions(map[player->location], player, monster);
                 // Wait fot the player choice
-                PlayerChoice(choice, &player, &map[player.location], monster, objects);
+                PlayerChoice(choice, player, &map[player->location], monster,
+                             objects, endGame);
                 fflush(stdout);
                 sem_post(sem);
-                ClrScr();
             }
             exit(0);
         }
         wait(&childPid);
         wait(&childPid);
-        if (player.energy <= 0) {
+        if (player->energy <= 0) {
             printf("\nPERDEU!! Boa Sorte para a próxima!");
         }
 
+        sem_destroy(sem);
+        munmap(sem, sizeof(sem_t));
+        munmap(endGame, sizeof(int));
+        munmap(player, sizeof(PLAYER));
+        munmap(monster, sizeof(MONSTER));
         return 0;
     }
 }
@@ -206,12 +215,12 @@ void PlayerInit(PLAYER *pPlayer) { // (ref:PlayerInit)
 }   
 
 /* Function to show the player stats */
-void PlayerStats(PLAYER player, ROOM map[], OBJECT objects[]) {
+void PlayerStats(PLAYER *player, ROOM map[], OBJECT objects[]) {
     printf("\n%s encontra-se na %s, atualmente tem %hd de energia!",
-           player.name, map[player.location].description, player.energy);
-    if (player.object >= 0) {
-        printf("\nObjecto: %s (Poder: %hd)", objects[player.object].name,
-               objects[player.object].power);
+           player->name, map[player->location].description, player->energy);
+    if (player->object >= 0) {
+        printf("\nObjecto: %s (Poder: %hd)", objects[player->object].name,
+               objects[player->object].power);
     } else {
         printf("\nProcure um objecto, pode ajuda-lo!");
     }
@@ -247,7 +256,7 @@ void MovePLayer(int location, PLAYER *pPlayer, ROOM *pRoom, MONSTER *pMonster) {
 *   returns: the player choice
 *
 */
-char PlayerOptions(ROOM map, PLAYER player, MONSTER *monster) {
+char PlayerOptions(ROOM map, PLAYER *player, MONSTER *monster) {
     char msg[MAX] = "\n\nAs suas opções:";
     char choice;
     
@@ -280,7 +289,7 @@ char PlayerOptions(ROOM map, PLAYER player, MONSTER *monster) {
         strcat(msg, "\n- 'A' para apanhar o objecto");
     
     // Check if the monster is in the room and add option to fight or run
-    if (monster->location == player.location && monster->energy > 0) {
+    if (monster->location == player->location && monster->energy > 0) {
         printf("\nEncontrou o monstro, lute ou fuja!");
         strcat(msg, "\n- 'L' para lutar com o monstro");
     }
@@ -301,7 +310,7 @@ char PlayerOptions(ROOM map, PLAYER player, MONSTER *monster) {
 
 // Function to execute the player choices
 void PlayerChoice(char choice, PLAYER *pPlayer, ROOM *pRoom,
-                  MONSTER *pMonster, OBJECT *pObjects) {
+                  MONSTER *pMonster, OBJECT *pObjects, int *endGame) {
     // convert the input char to lower
     char ch = tolower(choice);
     switch (ch) {
@@ -327,9 +336,10 @@ void PlayerChoice(char choice, PLAYER *pPlayer, ROOM *pRoom,
         case 'a': PickUpObject(pPlayer, pRoom);
             break;
         // fight monster
-        case 'l': MonsterFight(pPlayer, pMonster,  &pObjects[pPlayer->object]);
+        case 'l': MonsterFight(pPlayer, pMonster,  &pObjects[pPlayer->object],
+                               endGame);
             break;
-        case 't': PickUpTreasure(pRoom, pMonster);
+        case 't': PickUpTreasure(pRoom, pMonster, endGame);
             break;
     }
 }
@@ -342,14 +352,14 @@ void PlayerChoice(char choice, PLAYER *pPlayer, ROOM *pRoom,
 *   *pMonster: monster pointer
 *
  */
-void PickUpTreasure(ROOM *pRoom, MONSTER *pMonster) {
+void PickUpTreasure(ROOM *pRoom, MONSTER *pMonster, int *endGame) {
     if(pRoom->treasure == 1){
         if (pMonster->energy > 0){
             printf("\nO monstro ainda está vivo, o tesouro só se abre depois "
                    "de matar o monstro!");
         } else {
             printf("\nPARABÉNS!!! Conseguiu apanhar o tesouro!\n\nFIM");
-            endGame = 1;
+            *endGame = 1;
         }
     }
 }
@@ -498,7 +508,7 @@ void MonsterInit (MONSTER *pMonster, short int energy,
 *
 */
 void MonsterFight(PLAYER *pPlayer, MONSTER *pMonster,
-                  OBJECT *pObject) {
+                  OBJECT *pObject, int *endGame) {
     int r; /* variable to use for the random numbers */
 
     // check if the player and monster are alive
@@ -527,7 +537,7 @@ void MonsterFight(PLAYER *pPlayer, MONSTER *pMonster,
         pPlayer->energy -= r;
         printf("\nO monstro atacou-o e retirou-lhe %i de energia", r);
         if (pPlayer->energy <= 0)
-            endGame = 0;
+            *endGame = 1;
         if (pMonster->energy <= 0)
             printf("\nBoa, conseguiu matar o monstro, agora é só"
                    " encontrar o tesouro!");
@@ -545,10 +555,9 @@ void MonsterFight(PLAYER *pPlayer, MONSTER *pMonster,
 *   player: copy of the player struct
 *
 */
-void MonsterMove(MONSTER *pMonster, ROOM *pRoom, PLAYER player){
-    printf("\n-> helllooooooooooooooooooooo %hd", player.location);
+void MonsterMove(MONSTER *pMonster, ROOM *pRoom, PLAYER *player){
     /* check if the monster and the player are in the same room */
-    if(pMonster->location != player.location && pMonster->energy > 0){
+    if(pMonster->location != player->location && pMonster->energy > 0){
         srand(time(0)); // rand seed
         int r = rand() % nRoomMap; // generate a random room for the move
         int move = 0; // control variable for the move
@@ -590,6 +599,7 @@ void SuperUserInit(int argc, char *argv[], PLAYER *pPlayer){
             pPlayer->object = ((short)atoi(argv[3]) > 0) ? (short)atoi(argv[3]) : pPlayer->object;
         su = 1;
         printf("\nMODO SUPER USER ATIVO");
+        fflush(stdout);
     }
 }
 
@@ -612,5 +622,5 @@ void SuperUser(MONSTER *monster, ROOM map[]) {
 
 void ClrScr() {
     fflush(stdout);
-    //system("clear");
+    system("clear");
 }
