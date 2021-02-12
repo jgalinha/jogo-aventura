@@ -28,7 +28,7 @@
 
 short int su = NONE; /* Varriável para controlar o SuperUser */
 short int nRoomMap = NONE; /* Number of rooms in the map */
-short int nObjects = NONE; /*
+short int nObjects = NONE;
 
 /* Player Structure */
 typedef struct Player {
