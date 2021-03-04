@@ -637,6 +637,7 @@ void PickUpObject(PLAYER *pPlayer, ROOM *pRoom) {
 }
 #+END_SRC
 
+
 * Funções do =monstro=
 
 ** TODO MonsterInit [0%]
